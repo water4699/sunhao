@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.teacher.mapper.TeacherMapper">
+    
+    <resultMap type="Teacher" id="TeacherResult">
+        <result property="teacherId"    column="teacher_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="subjectId"    column="subject_id"    />
+        <result property="realName"    column="real_name"    />
+        <result property="gender"    column="gender"    />
+        <result property="education"    column="education"    />
+        <result property="university"    column="university"    />
+        <result property="hourlyRate"    column="hourly_rate"    />
+        <result property="rating"    column="rating"    />
+        <result property="status"    column="status"    />
+        <result property="image"    column="image"    />
+        <result property="creatTime"    column="creat_time"    />
+    </resultMap>
+
+    <sql id="selectTeacherVo">
+        select teacher_id, user_id, subject_id, real_name, gender, education, university, hourly_rate, rating, status, image, creat_time from teacher
+    </sql>
+
+    <select id="selectTeacherList" parameterType="Teacher" resultMap="TeacherResult">
+        <include refid="selectTeacherVo"/>
+        <where>  
+            <if test="userId != null  and userId != ''"> and user_id = #{userId}</if>
+            <if test="subjectId != null "> and subject_id = #{subjectId}</if>
+            <if test="realName != null  and realName != ''"> and real_name like concat('%', #{realName}, '%')</if>
+            <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
+            <if test="education != null  and education != ''"> and education = #{education}</if>
+            <if test="university != null  and university != ''"> and university = #{university}</if>
+            <if test="hourlyRate != null "> and hourly_rate = #{hourlyRate}</if>
+            <if test="rating != null "> and rating = #{rating}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="image != null  and image != ''"> and image = #{image}</if>
+            <if test="creatTime != null "> and creat_time = #{creatTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectTeacherByTeacherId" parameterType="String" resultMap="TeacherResult">
+        <include refid="selectTeacherVo"/>
+        where teacher_id = #{teacherId}
+    </select>
+    <select id="selectSubjectBySubjectId" resultType="java.lang.String">
+        select name from subject where subject_id = #{subjectid}
+    </select>
+
+    <insert id="insertTeacher" parameterType="Teacher" useGeneratedKeys="true" keyProperty="teacherId">
+        insert into teacher
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null and userId != ''">user_id,</if>
+            <if test="subjectId != null">subject_id,</if>
+            <if test="realName != null and realName != ''">real_name,</if>
+            <if test="gender != null and gender != ''">gender,</if>
+            <if test="education != null">education,</if>
+            <if test="university != null and university != ''">university,</if>
+            <if test="hourlyRate != null">hourly_rate,</if>
+            <if test="rating != null">rating,</if>
+            <if test="status != null">status,</if>
+            <if test="image != null and image != ''">image,</if>
+            <if test="creatTime != null">creat_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null and userId != ''">#{userId},</if>
+            <if test="subjectId != null">#{subjectId},</if>
+            <if test="realName != null and realName != ''">#{realName},</if>
+            <if test="gender != null and gender != ''">#{gender},</if>
+            <if test="education != null">#{education},</if>
+            <if test="university != null and university != ''">#{university},</if>
+            <if test="hourlyRate != null">#{hourlyRate},</if>
+            <if test="rating != null">#{rating},</if>
+            <if test="status != null">#{status},</if>
+            <if test="image != null and image != ''">#{image},</if>
+            <if test="creatTime != null">#{creatTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTeacher" parameterType="Teacher">
+        update teacher
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null and userId != ''">user_id = #{userId},</if>
+            <if test="subjectId != null">subject_id = #{subjectId},</if>
+            <if test="realName != null and realName != ''">real_name = #{realName},</if>
+            <if test="gender != null and gender != ''">gender = #{gender},</if>
+            <if test="education != null">education = #{education},</if>
+            <if test="university != null and university != ''">university = #{university},</if>
+            <if test="hourlyRate != null">hourly_rate = #{hourlyRate},</if>
+            <if test="rating != null">rating = #{rating},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="image != null and image != ''">image = #{image},</if>
+            <if test="creatTime != null">creat_time = #{creatTime},</if>
+        </trim>
+        where teacher_id = #{teacherId}
+    </update>
+
+    <delete id="deleteTeacherByTeacherId" parameterType="String">
+        delete from teacher where teacher_id = #{teacherId}
+    </delete>
+
+    <delete id="deleteTeacherByTeacherIds" parameterType="String">
+        delete from teacher where teacher_id in 
+        <foreach item="teacherId" collection="array" open="(" separator="," close=")">
+            #{teacherId}
+        </foreach>
+    </delete>
+</mapper>

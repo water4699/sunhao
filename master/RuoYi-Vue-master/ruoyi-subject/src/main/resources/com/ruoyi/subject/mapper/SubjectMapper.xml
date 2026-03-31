@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.subject.mapper.SubjectMapper">
+    
+    <resultMap type="Subject" id="SubjectResult">
+        <result property="subjectId"    column="subject_id"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="name"    column="name"    />
+        <result property="status"    column="status"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectSubjectVo">
+        select subject_id, category_id, name, status, created_at from subject
+    </sql>
+
+    <select id="selectSubjectList" parameterType="Subject" resultMap="SubjectResult">
+        <include refid="selectSubjectVo"/>
+        <where>  
+            <if test="categoryId != null  and categoryId != ''"> and category_id = #{categoryId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectSubjectBySubjectId" parameterType="String" resultMap="SubjectResult">
+        <include refid="selectSubjectVo"/>
+        where subject_id = #{subjectId}
+    </select>
+
+    <insert id="insertSubject" parameterType="Subject" useGeneratedKeys="true" keyProperty="subjectId">
+        insert into subject
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="categoryId != null and categoryId != ''">category_id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="status != null">status,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="categoryId != null and categoryId != ''">#{categoryId},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSubject" parameterType="Subject">
+        update subject
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="categoryId != null and categoryId != ''">category_id = #{categoryId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where subject_id = #{subjectId}
+    </update>
+
+    <delete id="deleteSubjectBySubjectId" parameterType="String">
+        delete from subject where subject_id = #{subjectId}
+    </delete>
+
+    <delete id="deleteSubjectBySubjectIds" parameterType="String">
+        delete from subject where subject_id in 
+        <foreach item="subjectId" collection="array" open="(" separator="," close=")">
+            #{subjectId}
+        </foreach>
+    </delete>
+</mapper>

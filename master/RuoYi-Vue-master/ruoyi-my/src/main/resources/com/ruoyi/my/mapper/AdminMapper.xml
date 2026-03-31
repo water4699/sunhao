@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.my.mapper.AdminMapper">
+    
+    <resultMap type="Admin" id="AdminResult">
+        <result property="adminId"    column="admin_id"    />
+        <result property="username"    column="username"    />
+        <result property="passwordHash"    column="password_hash"    />
+        <result property="fullName"    column="full_name"    />
+        <result property="role"    column="role"    />
+        <result property="email"    column="email"    />
+        <result property="status"    column="status"    />
+        <result property="lastLogin"    column="last_login"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectAdminVo">
+        select admin_id, username, password_hash, full_name, role, email, status, last_login, created_at from admin
+    </sql>
+
+    <select id="selectAdminList" parameterType="Admin" resultMap="AdminResult">
+        <include refid="selectAdminVo"/>
+        <where>  
+            <if test="username != null  and username != ''"> and username like concat('%', #{username}, '%')</if>
+            <if test="passwordHash != null  and passwordHash != ''"> and password_hash = #{passwordHash}</if>
+            <if test="fullName != null  and fullName != ''"> and full_name like concat('%', #{fullName}, '%')</if>
+            <if test="role != null  and role != ''"> and role = #{role}</if>
+            <if test="email != null  and email != ''"> and email = #{email}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="lastLogin != null "> and last_login = #{lastLogin}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectAdminByAdminId" parameterType="String" resultMap="AdminResult">
+        <include refid="selectAdminVo"/>
+        where admin_id = #{adminId}
+    </select>
+
+    <insert id="insertAdmin" parameterType="Admin" useGeneratedKeys="true" keyProperty="adminId">
+        insert into admin
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null and username != ''">username,</if>
+            <if test="passwordHash != null and passwordHash != ''">password_hash,</if>
+            <if test="fullName != null and fullName != ''">full_name,</if>
+            <if test="role != null and role != ''">role,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="status != null">status,</if>
+            <if test="lastLogin != null">last_login,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="username != null and username != ''">#{username},</if>
+            <if test="passwordHash != null and passwordHash != ''">#{passwordHash},</if>
+            <if test="fullName != null and fullName != ''">#{fullName},</if>
+            <if test="role != null and role != ''">#{role},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="status != null">#{status},</if>
+            <if test="lastLogin != null">#{lastLogin},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAdmin" parameterType="Admin">
+        update admin
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="passwordHash != null and passwordHash != ''">password_hash = #{passwordHash},</if>
+            <if test="fullName != null and fullName != ''">full_name = #{fullName},</if>
+            <if test="role != null and role != ''">role = #{role},</if>
+            <if test="email != null and email != ''">email = #{email},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="lastLogin != null">last_login = #{lastLogin},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where admin_id = #{adminId}
+    </update>
+
+    <delete id="deleteAdminByAdminId" parameterType="String">
+        delete from admin where admin_id = #{adminId}
+    </delete>
+
+    <delete id="deleteAdminByAdminIds" parameterType="String">
+        delete from admin where admin_id in 
+        <foreach item="adminId" collection="array" open="(" separator="," close=")">
+            #{adminId}
+        </foreach>
+    </delete>
+</mapper>

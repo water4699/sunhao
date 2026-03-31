@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.order.mapper.OrderMapper">
+    
+    <resultMap type="Order" id="OrderResult">
+        <result property="orderId"    column="order_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="courseId"    column="course_id"    />
+        <result property="promotionId"    column="promotion_id"    />
+        <result property="amount"    column="amount"    />
+        <result property="discountAmount"    column="discount_amount"    />
+        <result property="finalAmount"    column="final_amount"    />
+        <result property="paymentMethod"    column="payment_method"    />
+        <result property="paymentStatus"    column="payment_status"    />
+        <result property="transactionId"    column="transaction_id"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectOrderVo">
+        select order_id, user_id, course_id, promotion_id, amount, discount_amount, final_amount, payment_method, payment_status, transaction_id, created_at from `order`
+    </sql>
+
+    <select id="selectOrderList" parameterType="Order" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        <where>  
+            <if test="userId != null  and userId != ''"> and user_id = #{userId}</if>
+            <if test="courseId != null  and courseId != ''"> and course_id = #{courseId}</if>
+            <if test="promotionId != null  and promotionId != ''"> and promotion_id = #{promotionId}</if>
+            <if test="amount != null "> and amount = #{amount}</if>
+            <if test="discountAmount != null "> and discount_amount = #{discountAmount}</if>
+            <if test="finalAmount != null "> and final_amount = #{finalAmount}</if>
+            <if test="paymentMethod != null  and paymentMethod != ''"> and payment_method = #{paymentMethod}</if>
+            <if test="paymentStatus != null "> and payment_status = #{paymentStatus}</if>
+            <if test="transactionId != null  and transactionId != ''"> and transaction_id = #{transactionId}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectOrderByOrderId" parameterType="String" resultMap="OrderResult">
+        <include refid="selectOrderVo"/>
+        where order_id = #{orderId}
+    </select>
+
+    <insert id="insertOrder" parameterType="Order" useGeneratedKeys="true" keyProperty="orderId">
+        insert into order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null and userId != ''">user_id,</if>
+            <if test="courseId != null and courseId != ''">course_id,</if>
+            <if test="promotionId != null">promotion_id,</if>
+            <if test="amount != null">amount,</if>
+            <if test="discountAmount != null">discount_amount,</if>
+            <if test="finalAmount != null">final_amount,</if>
+            <if test="paymentMethod != null and paymentMethod != ''">payment_method,</if>
+            <if test="paymentStatus != null">payment_status,</if>
+            <if test="transactionId != null">transaction_id,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null and userId != ''">#{userId},</if>
+            <if test="courseId != null and courseId != ''">#{courseId},</if>
+            <if test="promotionId != null">#{promotionId},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="discountAmount != null">#{discountAmount},</if>
+            <if test="finalAmount != null">#{finalAmount},</if>
+            <if test="paymentMethod != null and paymentMethod != ''">#{paymentMethod},</if>
+            <if test="paymentStatus != null">#{paymentStatus},</if>
+            <if test="transactionId != null">#{transactionId},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateOrder" parameterType="Order">
+        update order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null and userId != ''">user_id = #{userId},</if>
+            <if test="courseId != null and courseId != ''">course_id = #{courseId},</if>
+            <if test="promotionId != null">promotion_id = #{promotionId},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="discountAmount != null">discount_amount = #{discountAmount},</if>
+            <if test="finalAmount != null">final_amount = #{finalAmount},</if>
+            <if test="paymentMethod != null and paymentMethod != ''">payment_method = #{paymentMethod},</if>
+            <if test="paymentStatus != null">payment_status = #{paymentStatus},</if>
+            <if test="transactionId != null">transaction_id = #{transactionId},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where order_id = #{orderId}
+    </update>
+
+    <delete id="deleteOrderByOrderId" parameterType="String">
+        delete from order where order_id = #{orderId}
+    </delete>
+
+    <delete id="deleteOrderByOrderIds" parameterType="String">
+        delete from order where order_id in 
+        <foreach item="orderId" collection="array" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </delete>
+</mapper>

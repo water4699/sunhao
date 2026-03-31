@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.area.mapper.AreaJinanMapper">
+    
+    <resultMap type="AreaJinan" id="AreaJinanResult">
+        <result property="areaId"    column="area_id"    />
+        <result property="name"    column="name"    />
+        <result property="level"    column="level"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectAreaJinanVo">
+        select area_id, name, level, created_at from area_jinan
+    </sql>
+
+    <select id="selectAreaJinanList" parameterType="AreaJinan" resultMap="AreaJinanResult">
+        <include refid="selectAreaJinanVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectAreaJinanByAreaId" parameterType="String" resultMap="AreaJinanResult">
+        <include refid="selectAreaJinanVo"/>
+        where area_id = #{areaId}
+    </select>
+
+    <insert id="insertAreaJinan" parameterType="AreaJinan" useGeneratedKeys="true" keyProperty="areaId">
+        insert into area_jinan
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="level != null and level != ''">level,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="level != null and level != ''">#{level},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAreaJinan" parameterType="AreaJinan">
+        update area_jinan
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="level != null and level != ''">level = #{level},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where area_id = #{areaId}
+    </update>
+
+    <delete id="deleteAreaJinanByAreaId" parameterType="String">
+        delete from area_jinan where area_id = #{areaId}
+    </delete>
+
+    <delete id="deleteAreaJinanByAreaIds" parameterType="String">
+        delete from area_jinan where area_id in 
+        <foreach item="areaId" collection="array" open="(" separator="," close=")">
+            #{areaId}
+        </foreach>
+    </delete>
+</mapper>

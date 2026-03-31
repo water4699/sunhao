@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.course.mapper.CourseMapper">
+    
+    <resultMap type="Course" id="CourseResult">
+        <result property="courseId"    column="course_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="teacherId"    column="teacher_id"    />
+        <result property="subjectId"    column="subject_id"    />
+        <result property="gradeId"    column="grade_id"    />
+        <result property="status"    column="status"    />
+        <result property="startDate"    column="start_date"    />
+        <result property="expectedHours"    column="expected_hours"    />
+        <result property="completedHours"    column="completed_hours"    />
+        <result property="hourlyRate"    column="hourly_rate"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectCourseVo">
+        select course_id, student_id, teacher_id, subject_id, grade_id, status, start_date, expected_hours, completed_hours, hourly_rate, created_at from course
+    </sql>
+
+    <select id="selectCourseList" parameterType="Course" resultMap="CourseResult">
+        <include refid="selectCourseVo"/>
+        <where>  
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="teacherId != null  and teacherId != ''"> and teacher_id = #{teacherId}</if>
+            <if test="subjectId != null  and subjectId != ''"> and subject_id = #{subjectId}</if>
+            <if test="gradeId != null  and gradeId != ''"> and grade_id = #{gradeId}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="startDate != null "> and start_date = #{startDate}</if>
+            <if test="expectedHours != null  and expectedHours != ''"> and expected_hours = #{expectedHours}</if>
+            <if test="completedHours != null  and completedHours != ''"> and completed_hours = #{completedHours}</if>
+            <if test="hourlyRate != null "> and hourly_rate = #{hourlyRate}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectCourseByCourseId" parameterType="String" resultMap="CourseResult">
+        <include refid="selectCourseVo"/>
+        where course_id = #{courseId}
+    </select>
+
+    <insert id="insertCourse" parameterType="Course" useGeneratedKeys="true" keyProperty="courseId">
+        insert into course
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="teacherId != null and teacherId != ''">teacher_id,</if>
+            <if test="subjectId != null and subjectId != ''">subject_id,</if>
+            <if test="gradeId != null and gradeId != ''">grade_id,</if>
+            <if test="status != null">status,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="expectedHours != null and expectedHours != ''">expected_hours,</if>
+            <if test="completedHours != null">completed_hours,</if>
+            <if test="hourlyRate != null">hourly_rate,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="teacherId != null and teacherId != ''">#{teacherId},</if>
+            <if test="subjectId != null and subjectId != ''">#{subjectId},</if>
+            <if test="gradeId != null and gradeId != ''">#{gradeId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="expectedHours != null and expectedHours != ''">#{expectedHours},</if>
+            <if test="completedHours != null">#{completedHours},</if>
+            <if test="hourlyRate != null">#{hourlyRate},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCourse" parameterType="Course">
+        update course
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="teacherId != null and teacherId != ''">teacher_id = #{teacherId},</if>
+            <if test="subjectId != null and subjectId != ''">subject_id = #{subjectId},</if>
+            <if test="gradeId != null and gradeId != ''">grade_id = #{gradeId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="expectedHours != null and expectedHours != ''">expected_hours = #{expectedHours},</if>
+            <if test="completedHours != null">completed_hours = #{completedHours},</if>
+            <if test="hourlyRate != null">hourly_rate = #{hourlyRate},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where course_id = #{courseId}
+    </update>
+
+    <delete id="deleteCourseByCourseId" parameterType="String">
+        delete from course where course_id = #{courseId}
+    </delete>
+
+    <delete id="deleteCourseByCourseIds" parameterType="String">
+        delete from course where course_id in 
+        <foreach item="courseId" collection="array" open="(" separator="," close=")">
+            #{courseId}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.card.mapper.CardMapper">
+    
+    <resultMap type="Card" id="CardResult">
+        <result property="cardId"    column="card_id"    />
+        <result property="cardName"    column="card_name"    />
+        <result property="price"    column="price"    />
+        <result property="durationCount"    column="duration_count"    />
+        <result property="discountRate"    column="discount_rate"    />
+        <result property="description"    column="description"    />
+        <result property="status"    column="status"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectCardVo">
+        select card_id, card_name, price, duration_count, discount_rate, description, status, created_at from card
+    </sql>
+
+    <select id="selectCardList" parameterType="Card" resultMap="CardResult">
+        <include refid="selectCardVo"/>
+        <where>  
+            <if test="cardName != null  and cardName != ''"> and card_name like concat('%', #{cardName}, '%')</if>
+            <if test="price != null "> and price = #{price}</if>
+            <if test="durationCount != null  and durationCount != ''"> and duration_count = #{durationCount}</if>
+            <if test="discountRate != null "> and discount_rate = #{discountRate}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectCardByCardId" parameterType="String" resultMap="CardResult">
+        <include refid="selectCardVo"/>
+        where card_id = #{cardId}
+    </select>
+
+    <insert id="insertCard" parameterType="Card" useGeneratedKeys="true" keyProperty="cardId">
+        insert into card
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="cardName != null and cardName != ''">card_name,</if>
+            <if test="price != null">price,</if>
+            <if test="durationCount != null and durationCount != ''">duration_count,</if>
+            <if test="discountRate != null">discount_rate,</if>
+            <if test="description != null">description,</if>
+            <if test="status != null">status,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="cardName != null and cardName != ''">#{cardName},</if>
+            <if test="price != null">#{price},</if>
+            <if test="durationCount != null and durationCount != ''">#{durationCount},</if>
+            <if test="discountRate != null">#{discountRate},</if>
+            <if test="description != null">#{description},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCard" parameterType="Card">
+        update card
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="cardName != null and cardName != ''">card_name = #{cardName},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="durationCount != null and durationCount != ''">duration_count = #{durationCount},</if>
+            <if test="discountRate != null">discount_rate = #{discountRate},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where card_id = #{cardId}
+    </update>
+
+    <delete id="deleteCardByCardId" parameterType="String">
+        delete from card where card_id = #{cardId}
+    </delete>
+
+    <delete id="deleteCardByCardIds" parameterType="String">
+        delete from card where card_id in 
+        <foreach item="cardId" collection="array" open="(" separator="," close=")">
+            #{cardId}
+        </foreach>
+    </delete>
+</mapper>

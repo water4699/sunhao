@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.student.mapper.StudentMapper">
+    
+    <resultMap type="Student" id="StudentResult">
+        <result property="studentId"    column="student_id"    />
+        <result property="subjectId"    column="subject_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="realName"    column="real_name"    />
+        <result property="gender"    column="gender"    />
+        <result property="birthDate"    column="birth_date"    />
+        <result property="school"    column="school"    />
+        <result property="gradeLevel"    column="grade_level"    />
+        <result property="learningNeeds"    column="learning_needs"    />
+        <result property="budget"    column="budget"    />
+        <result property="status"    column="status"    />
+        <result property="createdAt"    column="created_at"    />
+        <result property="updatedAt"    column="updated_at"    />
+    </resultMap>
+
+    <sql id="selectStudentVo">
+        select student_id, subject_id, user_id, real_name, gender, birth_date, school, grade_level, learning_needs, budget, status, created_at, updated_at from student
+    </sql>
+
+    <select id="selectStudentList" parameterType="Student" resultMap="StudentResult">
+        <include refid="selectStudentVo"/>
+        <where>  
+            <if test="subjectId != null  and subjectId != ''"> and subject_id = #{subjectId}</if>
+            <if test="userId != null  and userId != ''"> and user_id = #{userId}</if>
+            <if test="realName != null  and realName != ''"> and real_name like concat('%', #{realName}, '%')</if>
+            <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
+            <if test="birthDate != null "> and birth_date = #{birthDate}</if>
+            <if test="school != null  and school != ''"> and school = #{school}</if>
+            <if test="gradeLevel != null  and gradeLevel != ''"> and grade_level = #{gradeLevel}</if>
+            <if test="learningNeeds != null  and learningNeeds != ''"> and learning_needs = #{learningNeeds}</if>
+            <if test="budget != null "> and budget = #{budget}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+            <if test="updatedAt != null "> and updated_at = #{updatedAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectStudentByStudentId" parameterType="String" resultMap="StudentResult">
+        <include refid="selectStudentVo"/>
+        where student_id = #{studentId}
+    </select>
+
+    <insert id="insertStudent" parameterType="Student" useGeneratedKeys="true" keyProperty="studentId">
+        insert into student
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="subjectId != null and subjectId != ''">subject_id,</if>
+            <if test="userId != null and userId != ''">user_id,</if>
+            <if test="realName != null and realName != ''">real_name,</if>
+            <if test="gender != null and gender != ''">gender,</if>
+            <if test="birthDate != null">birth_date,</if>
+            <if test="school != null and school != ''">school,</if>
+            <if test="gradeLevel != null and gradeLevel != ''">grade_level,</if>
+            <if test="learningNeeds != null">learning_needs,</if>
+            <if test="budget != null">budget,</if>
+            <if test="status != null">status,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="subjectId != null and subjectId != ''">#{subjectId},</if>
+            <if test="userId != null and userId != ''">#{userId},</if>
+            <if test="realName != null and realName != ''">#{realName},</if>
+            <if test="gender != null and gender != ''">#{gender},</if>
+            <if test="birthDate != null">#{birthDate},</if>
+            <if test="school != null and school != ''">#{school},</if>
+            <if test="gradeLevel != null and gradeLevel != ''">#{gradeLevel},</if>
+            <if test="learningNeeds != null">#{learningNeeds},</if>
+            <if test="budget != null">#{budget},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateStudent" parameterType="Student">
+        update student
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="subjectId != null and subjectId != ''">subject_id = #{subjectId},</if>
+            <if test="userId != null and userId != ''">user_id = #{userId},</if>
+            <if test="realName != null and realName != ''">real_name = #{realName},</if>
+            <if test="gender != null and gender != ''">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="school != null and school != ''">school = #{school},</if>
+            <if test="gradeLevel != null and gradeLevel != ''">grade_level = #{gradeLevel},</if>
+            <if test="learningNeeds != null">learning_needs = #{learningNeeds},</if>
+            <if test="budget != null">budget = #{budget},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+        </trim>
+        where student_id = #{studentId}
+    </update>
+
+    <delete id="deleteStudentByStudentId" parameterType="String">
+        delete from student where student_id = #{studentId}
+    </delete>
+
+    <delete id="deleteStudentByStudentIds" parameterType="String">
+        delete from student where student_id in 
+        <foreach item="studentId" collection="array" open="(" separator="," close=")">
+            #{studentId}
+        </foreach>
+    </delete>
+</mapper>

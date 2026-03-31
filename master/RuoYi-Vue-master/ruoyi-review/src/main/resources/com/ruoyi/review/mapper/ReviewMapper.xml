@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.review.mapper.ReviewMapper">
+    
+    <resultMap type="Review" id="ReviewResult">
+        <result property="reviewId"    column="review_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="teacherId"    column="teacher_id"    />
+        <result property="bookingId"    column="booking_id"    />
+        <result property="rating"    column="rating"    />
+        <result property="comment"    column="comment"    />
+        <result property="status"    column="status"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectReviewVo">
+        select review_id, student_id, teacher_id, booking_id, rating, comment, status, created_at from review
+    </sql>
+
+    <select id="selectReviewList" parameterType="Review" resultMap="ReviewResult">
+        <include refid="selectReviewVo"/>
+        <where>  
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="teacherId != null  and teacherId != ''"> and teacher_id = #{teacherId}</if>
+            <if test="bookingId != null  and bookingId != ''"> and booking_id = #{bookingId}</if>
+            <if test="rating != null  and rating != ''"> and rating = #{rating}</if>
+            <if test="comment != null  and comment != ''"> and comment = #{comment}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectReviewByReviewId" parameterType="String" resultMap="ReviewResult">
+        <include refid="selectReviewVo"/>
+        where review_id = #{reviewId}
+    </select>
+
+    <insert id="insertReview" parameterType="Review" useGeneratedKeys="true" keyProperty="reviewId">
+        insert into review
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="teacherId != null and teacherId != ''">teacher_id,</if>
+            <if test="bookingId != null and bookingId != ''">booking_id,</if>
+            <if test="rating != null and rating != ''">rating,</if>
+            <if test="comment != null">comment,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="teacherId != null and teacherId != ''">#{teacherId},</if>
+            <if test="bookingId != null and bookingId != ''">#{bookingId},</if>
+            <if test="rating != null and rating != ''">#{rating},</if>
+            <if test="comment != null">#{comment},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateReview" parameterType="Review">
+        update review
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="teacherId != null and teacherId != ''">teacher_id = #{teacherId},</if>
+            <if test="bookingId != null and bookingId != ''">booking_id = #{bookingId},</if>
+            <if test="rating != null and rating != ''">rating = #{rating},</if>
+            <if test="comment != null">comment = #{comment},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where review_id = #{reviewId}
+    </update>
+
+    <delete id="deleteReviewByReviewId" parameterType="String">
+        delete from review where review_id = #{reviewId}
+    </delete>
+
+    <delete id="deleteReviewByReviewIds" parameterType="String">
+        delete from review where review_id in 
+        <foreach item="reviewId" collection="array" open="(" separator="," close=")">
+            #{reviewId}
+        </foreach>
+    </delete>
+
+    <select id="selectStudentByStudentId" resultType="java.lang.String">
+        select real_name from student where student_id = #{studentId}
+    </select>
+<!--        <select id="selectTeacherByTeacherId" resultType="java.lang.String">-->
+<!--        select real_name from teacher where teacher_id = #{teacherId}-->
+<!--    </select>-->
+
+
+
+</mapper>

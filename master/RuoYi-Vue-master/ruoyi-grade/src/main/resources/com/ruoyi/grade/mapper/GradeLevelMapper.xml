@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.grade.mapper.GradeLevelMapper">
+    
+    <resultMap type="GradeLevel" id="GradeLevelResult">
+        <result property="gradeId"    column="grade_id"    />
+        <result property="name"    column="name"    />
+        <result property="educationStage"    column="education_stage"    />
+        <result property="order"    column="order"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectGradeLevelVo">
+        select grade_id, name, education_stage, `order`, created_at from grade_level
+    </sql>
+
+    <select id="selectGradeLevelList" parameterType="GradeLevel" resultMap="GradeLevelResult">
+        <include refid="selectGradeLevelVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="educationStage != null  and educationStage != ''"> and education_stage = #{educationStage}</if>
+            <if test="order != null  and order != ''"> and order = #{order}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectGradeLevelByGradeId" parameterType="String" resultMap="GradeLevelResult">
+        <include refid="selectGradeLevelVo"/>
+        where grade_id = #{gradeId}
+    </select>
+
+    <insert id="insertGradeLevel" parameterType="GradeLevel" useGeneratedKeys="true" keyProperty="gradeId">
+        insert into grade_level
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="educationStage != null and educationStage != ''">education_stage,</if>
+            <if test="order != null and order != ''">order,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="educationStage != null and educationStage != ''">#{educationStage},</if>
+            <if test="order != null and order != ''">#{order},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateGradeLevel" parameterType="GradeLevel">
+        update grade_level
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="educationStage != null and educationStage != ''">education_stage = #{educationStage},</if>
+            <if test="order != null and order != ''">order = #{order},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where grade_id = #{gradeId}
+    </update>
+
+    <delete id="deleteGradeLevelByGradeId" parameterType="String">
+        delete from grade_level where grade_id = #{gradeId}
+    </delete>
+
+    <delete id="deleteGradeLevelByGradeIds" parameterType="String">
+        delete from grade_level where grade_id in 
+        <foreach item="gradeId" collection="array" open="(" separator="," close=")">
+            #{gradeId}
+        </foreach>
+    </delete>
+</mapper>

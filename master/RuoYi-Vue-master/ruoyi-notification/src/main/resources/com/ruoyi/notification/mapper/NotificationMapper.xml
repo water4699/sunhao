@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.notification.mapper.NotificationMapper">
+    
+    <resultMap type="Notification" id="NotificationResult">
+        <result property="notificationId"    column="notification_id"    />
+        <result property="title"    column="title"    />
+        <result property="content"    column="content"    />
+        <result property="type"    column="type"    />
+        <result property="status"    column="status"    />
+        <result property="sentAt"    column="sent_at"    />
+    </resultMap>
+
+    <sql id="selectNotificationVo">
+        select notification_id, title, content, type, status, sent_at from notification
+    </sql>
+
+    <select id="selectNotificationList" parameterType="Notification" resultMap="NotificationResult">
+        <include refid="selectNotificationVo"/>
+        <where>  
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="content != null  and content != ''"> and content = #{content}</if>
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="sentAt != null "> and sent_at = #{sentAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectNotificationByNotificationId" parameterType="String" resultMap="NotificationResult">
+        <include refid="selectNotificationVo"/>
+        where notification_id = #{notificationId}
+    </select>
+
+    <insert id="insertNotification" parameterType="Notification" useGeneratedKeys="true" keyProperty="notificationId">
+        insert into notification
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null and title != ''">title,</if>
+            <if test="content != null and content != ''">content,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="status != null">status,</if>
+            <if test="sentAt != null">sent_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="content != null and content != ''">#{content},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sentAt != null">#{sentAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateNotification" parameterType="Notification">
+        update notification
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sentAt != null">sent_at = #{sentAt},</if>
+        </trim>
+        where notification_id = #{notificationId}
+    </update>
+
+    <delete id="deleteNotificationByNotificationId" parameterType="String">
+        delete from notification where notification_id = #{notificationId}
+    </delete>
+
+    <delete id="deleteNotificationByNotificationIds" parameterType="String">
+        delete from notification where notification_id in 
+        <foreach item="notificationId" collection="array" open="(" separator="," close=")">
+            #{notificationId}
+        </foreach>
+    </delete>
+</mapper>
