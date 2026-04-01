@@ -61,6 +61,13 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="认证状态" prop="status">
+        <el-select v-model="queryParams.status" clearable placeholder="全部" style="width: 150px">
+          <el-option label="待审核" :value="0" />
+          <el-option label="已通过" :value="1" />
+          <el-option label="已驳回" :value="2" />
+        </el-select>
+      </el-form-item>
 <!--&lt;!&ndash;      <el-form-item label="时间" prop="creatTime">&ndash;&gt;-->
 <!--&lt;!&ndash;        <el-date-picker clearable&ndash;&gt;-->
 <!--&lt;!&ndash;          v-model="queryParams.creatTime"&ndash;&gt;-->
@@ -142,7 +149,14 @@
       </el-table-column>
       <el-table-column label="时薪" align="center" prop="hourlyRate" />
       <el-table-column label="平均评分" align="center" prop="rating" />
-      <el-table-column label="认证状态" align="center" prop="status" />
+      <el-table-column label="认证状态" align="center" prop="status" width="110">
+        <template slot-scope="scope">
+          <el-tag v-if="Number(scope.row.status) === 0" type="warning" size="small">待审核</el-tag>
+          <el-tag v-else-if="Number(scope.row.status) === 1" type="success" size="small">已通过</el-tag>
+          <el-tag v-else-if="Number(scope.row.status) === 2" type="info" size="small">已驳回</el-tag>
+          <span v-else>{{ scope.row.status }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="图片" align="center" prop="image" width="100">
         <template slot-scope="scope">
           <image-preview :src="scope.row.image" :width="50" :height="50"/>
@@ -154,8 +168,24 @@
           <span>{{ parseTime(scope.row.creatTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
         <template slot-scope="scope">
+          <el-button
+            v-if="Number(scope.row.status) === 0"
+            size="mini"
+            type="text"
+            icon="el-icon-check"
+            @click="handleApprove(scope.row)"
+            v-hasPermi="['system:teacher:edit']"
+          >通过</el-button>
+          <el-button
+            v-if="Number(scope.row.status) === 0"
+            size="mini"
+            type="text"
+            icon="el-icon-close"
+            @click="handleReject(scope.row)"
+            v-hasPermi="['system:teacher:edit']"
+          >驳回</el-button>
           <el-button
             size="mini"
             type="text"
@@ -185,6 +215,23 @@
     <!-- 添加或修改教师信息对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="560px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="认证状态" prop="status">
+          <el-select
+            v-if="form.teacherId != null"
+            v-model="form.status"
+            placeholder="请选择审核状态"
+            style="width: 100%"
+          >
+            <el-option label="待审核" :value="0" />
+            <el-option label="已通过（家长端「找老师」可见）" :value="1" />
+            <el-option label="已驳回" :value="2" />
+          </el-select>
+          <el-input
+            v-else
+            value="待审核（保存后须管理员在「修改」中审核通过）"
+            disabled
+          />
+        </el-form-item>
         <el-form-item label="关联科目" prop="subjectId">
           <el-input v-model="form.subjectId" placeholder="请输入科目ID" />
         </el-form-item>
@@ -411,7 +458,7 @@ export default {
         university: null,
         hourlyRate: null,
         rating: null,
-        status: null,
+        status: 0,
         image: null,
         creatTime: null,
         areaId: null,
@@ -454,6 +501,9 @@ export default {
         if (this.form.gradeId != null && this.form.gradeId !== "") {
           this.form.gradeId = String(this.form.gradeId)
         }
+        if (this.form.status != null && this.form.status !== "") {
+          this.form.status = Number(this.form.status)
+        }
         this.open = true
         this.title = "修改教师信息"
       })
@@ -477,6 +527,24 @@ export default {
           }
         }
       })
+    },
+    handleApprove(row) {
+      const teacherId = row.teacherId
+      this.$modal.confirm('确认将该教师审核为「已通过」？通过后家长端「找老师」将展示该教师。').then(() => {
+        return updateTeacher({ teacherId: teacherId, status: 1 })
+      }).then(() => {
+        this.getList()
+        this.$modal.msgSuccess("已审核通过")
+      }).catch(() => {})
+    },
+    handleReject(row) {
+      const teacherId = row.teacherId
+      this.$modal.confirm('确认驳回该入驻申请？驳回后家长端不会展示该教师。').then(() => {
+        return updateTeacher({ teacherId: teacherId, status: 2 })
+      }).then(() => {
+        this.getList()
+        this.$modal.msgSuccess("已驳回")
+      }).catch(() => {})
     },
     /** 删除按钮操作 */
     handleDelete(row) {

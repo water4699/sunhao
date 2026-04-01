@@ -1,11 +1,11 @@
 import request from '@/utils/request'
 
-// 向教师表里插入数据
+/** 老师入驻：仅登录即可；状态固定待审，由管理端审核 */
 export function teacherJoin(data) {
   return request({
-    'url': '/system/teacher',
-	'data': data,
-    'method': 'post',
+    url: '/system/teacher/app/join',
+    method: 'post',
+    data
   })
 }
 

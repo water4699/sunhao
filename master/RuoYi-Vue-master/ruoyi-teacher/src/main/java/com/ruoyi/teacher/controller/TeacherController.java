@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
+import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.teacher.domain.TeacherVo;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,7 +50,6 @@ public class TeacherController extends BaseController
             TeacherVo teacherVo = new TeacherVo();
             BeanUtils.copyBeanProp(teacherVo, tecaher);
             teacherVo.setSubjectName(teacherService.selectSubjectBySubjectId(tecaher.getSubjectId()));
-            System.err.println(teacherVo);
             return teacherVo;
         }).collect(Collectors.toList());
         return getDataTable(list);
@@ -90,9 +91,49 @@ public class TeacherController extends BaseController
         @PostMapping
         public AjaxResult add(@RequestBody Teacher teacher)
         {
-            System.err.println(teacher);
+            if (StringUtils.isEmpty(teacher.getUserId()))
+            {
+                try
+                {
+                    teacher.setUserId(String.valueOf(SecurityUtils.getUserId()));
+                }
+                catch (Exception e)
+                {
+                    return error("请先登录后再提交入驻申请");
+                }
+            }
+            if (teacherService.countTeacherByUserId(teacher.getUserId()) > 0)
+            {
+                return error("该用户已存在教师档案，请勿重复添加；如需变更审核状态请使用「修改」或联系管理员。");
+            }
+            /* 入驻/新增一律待审核，禁止客户端自拟「已通过」 */
+            teacher.setStatus(0L);
             return toAjax(teacherService.insertTeacher(teacher));
         }
+
+    /**
+     * 小程序老师入驻（仅需登录，不要求 system:teacher:add；审核仅能在管理端完成）
+     */
+    @PostMapping("/app/join")
+    public AjaxResult appJoin(@RequestBody Teacher teacher)
+    {
+        String uid;
+        try
+        {
+            uid = String.valueOf(SecurityUtils.getUserId());
+        }
+        catch (Exception e)
+        {
+            return error("请先登录后再提交入驻申请");
+        }
+        if (teacherService.countTeacherByUserId(uid) > 0)
+        {
+            return error("您已提交过入驻申请，请等待管理员审核；请勿重复提交。");
+        }
+        teacher.setUserId(uid);
+        teacher.setStatus(0L);
+        return toAjax(teacherService.insertTeacher(teacher));
+    }
 
     /**
      * 修改教师信息

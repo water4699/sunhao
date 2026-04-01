@@ -8,6 +8,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="teacherId"    column="teacher_id"    />
         <result property="userId"    column="user_id"    />
         <result property="subjectId"    column="subject_id"    />
+        <result property="areaId"    column="area_id"    />
+        <result property="gradeId"    column="grade_id"    />
         <result property="realName"    column="real_name"    />
         <result property="gender"    column="gender"    />
         <result property="education"    column="education"    />
@@ -20,7 +22,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectTeacherVo">
-        select teacher_id, user_id, subject_id, real_name, gender, education, university, hourly_rate, rating, status, image, creat_time from teacher
+        select teacher_id, user_id, subject_id, area_id, grade_id, real_name, gender, education, university, hourly_rate, rating, status, image, creat_time from teacher
     </sql>
 
     <select id="selectTeacherList" parameterType="Teacher" resultMap="TeacherResult">
@@ -28,6 +30,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="userId != null  and userId != ''"> and user_id = #{userId}</if>
             <if test="subjectId != null "> and subject_id = #{subjectId}</if>
+            <if test="areaId != null  and areaId != ''"> and area_id = #{areaId}</if>
+            <if test="gradeId != null  and gradeId != ''"> and grade_id = #{gradeId}</if>
             <if test="realName != null  and realName != ''"> and real_name like concat('%', #{realName}, '%')</if>
             <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
             <if test="education != null  and education != ''"> and education = #{education}</if>
@@ -53,6 +57,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null and userId != ''">user_id,</if>
             <if test="subjectId != null">subject_id,</if>
+            <if test="areaId != null and areaId != ''">area_id,</if>
+            <if test="gradeId != null and gradeId != ''">grade_id,</if>
             <if test="realName != null and realName != ''">real_name,</if>
             <if test="gender != null and gender != ''">gender,</if>
             <if test="education != null">education,</if>
@@ -66,6 +72,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="userId != null and userId != ''">#{userId},</if>
             <if test="subjectId != null">#{subjectId},</if>
+            <if test="areaId != null and areaId != ''">#{areaId},</if>
+            <if test="gradeId != null and gradeId != ''">#{gradeId},</if>
             <if test="realName != null and realName != ''">#{realName},</if>
             <if test="gender != null and gender != ''">#{gender},</if>
             <if test="education != null">#{education},</if>
@@ -83,6 +91,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null and userId != ''">user_id = #{userId},</if>
             <if test="subjectId != null">subject_id = #{subjectId},</if>
+            <if test="areaId != null">area_id = #{areaId},</if>
+            <if test="gradeId != null">grade_id = #{gradeId},</if>
             <if test="realName != null and realName != ''">real_name = #{realName},</if>
             <if test="gender != null and gender != ''">gender = #{gender},</if>
             <if test="education != null">education = #{education},</if>
@@ -106,4 +116,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{teacherId}
         </foreach>
     </delete>
+
+    <select id="countTeacherByUserId" resultType="int">
+        select count(*) from teacher where user_id = #{userId}
+    </select>
 </mapper>

@@ -92,4 +92,10 @@ public class TeacherServiceImpl implements ITeacherService
     public String selectSubjectBySubjectId(Integer subjectid) {
         return teacherMapper.selectSubjectBySubjectId(subjectid);
     }
+
+    @Override
+    public int countTeacherByUserId(String userId)
+    {
+        return teacherMapper.countTeacherByUserId(userId);
+    }
 }

@@ -403,6 +403,8 @@
 					...this.formData,
 					image: this.formData.image.replace(baseUrl, '')
 				}
+				delete submitData.status
+				delete submitData.userId
 				const sid = parseInt(submitData.subjectId, 10)
 				if (!isNaN(sid)) {
 					submitData.subjectId = sid
