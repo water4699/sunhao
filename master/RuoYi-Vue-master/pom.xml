@@ -230,7 +230,6 @@
         <module>ruoyi-common</module>
         <module>ruoyi-my</module>
         <module>ruoyi-area</module>
-        <module>ruoyi-area</module>
         <module>ruoyi-classroom</module>
         <module>ruoyi-schedule</module>
         <module>ruoyi-course</module>
@@ -245,7 +244,6 @@
         <module>ruoyi-subject</module>
         <module>ruoyi-teacher</module>
         <module>ruoyi-card</module>
-        <module>ruoyi-users</module>
         <module>ruoyi-users</module>
     </modules>
     <packaging>pom</packaging>

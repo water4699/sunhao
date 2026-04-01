@@ -48,7 +48,6 @@ public class ReviewController extends BaseController
             ReviewVo reviewVo = new ReviewVo();
             BeanUtils.copyBeanProp(reviewVo, review1);
             reviewVo.setStudentName(reviewService.selectStudentByStudentId(review1.getStudentId()));
-            System.err.println(reviewVo);
             return reviewVo;
         }).collect(Collectors.toList());
         return getDataTable(list);

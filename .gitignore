@@ -14,6 +14,9 @@ Thumbs.db
 # uni-app build output
 **/unpackage/
 
+# Maven（若于仓库根目录执行构建）
+**/target/
+
 # Logs
 **/*.log
 
