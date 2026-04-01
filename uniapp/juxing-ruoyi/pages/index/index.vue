@@ -26,6 +26,12 @@
 				<text class="function-desc">任意查询/随时随地接单</text>
 			</view>
 		</view>
+		<view class="core-functions-extra">
+			<view class="function-card-wide" @click="goReviewList">
+				<text class="function-title">家长评价</text>
+				<text class="function-desc">已通过审核的真实评价</text>
+			</view>
+		</view>
 		<!-- 服务承诺区 -->
 		<view class="service-promises">
 			<view class="promise-title">聚星教育服务承诺</view>
@@ -231,6 +237,11 @@
 					url: '/pages/teacherJoin/teacherJoin'
 				});
 			},
+			goReviewList() {
+				uni.navigateTo({
+					url: '/pages/review/review'
+				});
+			},
 			onSwiperChange(e) {
 				this.currentSwiperIndex = e.detail.current;
 			},
@@ -315,6 +326,21 @@
 		flex-direction: column;
 		align-items: center;
 		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+	}
+
+	.core-functions-extra {
+		padding: 0 30rpx 24rpx;
+	}
+
+	.function-card-wide {
+		width: 100%;
+		background: #FFFFFF;
+		border-radius: 16rpx;
+		padding: 28rpx 32rpx;
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
 	}
 
 	.function-icon {

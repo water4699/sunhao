@@ -214,7 +214,7 @@ export default {
         this.productOrderList = rows.map(r => ({
           id: r.orderId,
           orderNumber: String(r.orderId),
-          title: '商品 ID：' + (r.courseId || '-'),
+          title: r.productName ? r.productName : '商品 ID：' + (r.courseId || '-'),
           orderTime: r.createdAt || '',
           price: r.finalAmount != null ? r.finalAmount : r.amount
         }))

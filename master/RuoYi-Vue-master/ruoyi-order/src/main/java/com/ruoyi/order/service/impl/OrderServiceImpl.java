@@ -9,6 +9,7 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.order.mapper.OrderMapper;
 import com.ruoyi.order.domain.Order;
+import com.ruoyi.order.domain.OrderAppVo;
 import com.ruoyi.order.service.IOrderService;
 import com.ruoyi.product.domain.Product;
 import com.ruoyi.product.service.IProductService;
@@ -150,5 +151,11 @@ public class OrderServiceImpl implements IOrderService
             productService.updateProduct(p);
         }
         return order.getOrderId();
+    }
+
+    @Override
+    public List<OrderAppVo> selectAppOrderListByUserId(String userId)
+    {
+        return orderMapper.selectAppOrderListByUserId(userId);
     }
 }

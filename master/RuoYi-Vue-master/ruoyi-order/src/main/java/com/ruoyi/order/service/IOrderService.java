@@ -2,6 +2,7 @@ package com.ruoyi.order.service;
 
 import java.util.List;
 import com.ruoyi.order.domain.Order;
+import com.ruoyi.order.domain.OrderAppVo;
 
 /**
  * 订单Service接口
@@ -60,4 +61,7 @@ public interface IOrderService
      * 小程序：模拟支付创建商品订单；order.courseId 字段存放 productId
      */
     public String createProductOrderForUser(Long userId, String productId, Integer quantity);
+
+    /** 小程序订单列表（含商品名） */
+    public List<OrderAppVo> selectAppOrderListByUserId(String userId);
 }

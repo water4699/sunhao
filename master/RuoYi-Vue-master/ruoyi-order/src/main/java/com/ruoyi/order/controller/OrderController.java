@@ -19,6 +19,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.order.domain.AppProductOrderRequest;
 import com.ruoyi.order.domain.Order;
+import com.ruoyi.order.domain.OrderAppVo;
 import com.ruoyi.order.service.IOrderService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -97,9 +98,8 @@ public class OrderController extends BaseController
     public TableDataInfo appList()
     {
         startPage();
-        Order q = new Order();
-        q.setUserId(String.valueOf(SecurityUtils.getUserId()));
-        List<Order> list = orderService.selectOrderList(q);
+        String uid = String.valueOf(SecurityUtils.getUserId());
+        List<OrderAppVo> list = orderService.selectAppOrderListByUserId(uid);
         return getDataTable(list);
     }
 

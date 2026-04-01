@@ -52,6 +52,9 @@
 			<view class="action-btn">
 				<button @click="handleLogin" class="login-btn cu-btn block bg-yellow lg round">登录</button>
 			</view>
+			<view class="footer-links">
+				<text class="link-text" @click="goRegister">没有账号？去注册</text>
+			</view>
 		</view>
 	</view>
 </template>
@@ -80,13 +83,13 @@
 				register: false,
 				loginType: 'code',
 				loginForm: {
-					username: 'zhangsan',
-					password: 'admin123',
+					username: '',
+					password: '',
 					code: '',
 					uuid: ''
 				},
 				codeLoginForm: {
-					phone: '15888888888',
+					phone: '',
 					code: ''
 				},
 				smsCodeBtn: {
@@ -105,6 +108,12 @@
 
 			switchType(type) {
 				this.loginType = type
+			},
+
+			goRegister() {
+				uni.navigateTo({
+					url: '/pages/register'
+				})
 			},
 
 			// 获取图形验证码
@@ -415,6 +424,16 @@
 				margin-left: 10px;
 				width: 200rpx;
 			}
+		}
+
+		.footer-links {
+			margin-top: 36rpx;
+			text-align: center;
+		}
+
+		.link-text {
+			font-size: 28rpx;
+			color: #d48806;
 		}
 	}
 

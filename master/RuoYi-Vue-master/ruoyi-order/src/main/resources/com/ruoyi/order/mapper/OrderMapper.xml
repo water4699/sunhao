@@ -98,4 +98,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{orderId}
         </foreach>
     </delete>
+
+    <select id="selectAppOrderListByUserId" resultType="com.ruoyi.order.domain.OrderAppVo">
+        select o.order_id as orderId,
+               o.user_id as userId,
+               o.course_id as courseId,
+               o.promotion_id as promotionId,
+               o.amount,
+               o.discount_amount as discountAmount,
+               o.final_amount as finalAmount,
+               o.payment_method as paymentMethod,
+               o.payment_status as paymentStatus,
+               o.transaction_id as transactionId,
+               o.created_at as createdAt,
+               p.name as productName
+        from `order` o
+        left join product p on o.course_id = p.product_id
+        where o.user_id = #{userId}
+        order by o.created_at desc
+    </select>
 </mapper>

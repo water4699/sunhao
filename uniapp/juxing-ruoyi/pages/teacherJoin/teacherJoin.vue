@@ -49,6 +49,26 @@
           />
         </view> -->
 
+				<!-- 所在地区 -->
+				<view class="form-item">
+					<text class="label">所在地区<text class="required">*</text></text>
+					<picker mode="selector" :range="areaOptions" @change="handleAreaChange" class="native-picker">
+						<view class="picker-text">
+							{{ selectedArea || '请选择所在地区' }}
+						</view>
+					</picker>
+				</view>
+
+				<!-- 授课年级 -->
+				<view class="form-item">
+					<text class="label">授课年级<text class="required">*</text></text>
+					<picker mode="selector" :range="gradeOptions" @change="handleGradeChange" class="native-picker">
+						<view class="picker-text">
+							{{ selectedGrade || '请选择授课年级' }}
+						</view>
+					</picker>
+				</view>
+
 				<!-- 教学科目选择 -->
 				<view class="form-item">
 					<text class="label">教学科目<text class="required">*</text></text>
@@ -122,134 +142,6 @@
 		</view>
 	</view>
 </template>
-<!-- 
-<script>
-	import {
-		baseUrl
-	} from '../../config';
-	import {
-		teacherJoin
-	} from '@/api/teacherJoin/teacherJoin'
-	import {
-		teacherImage
-	} from '@/api/teacherJoin/teacherJoin'
-
-	export default {
-		data() {
-			return {
-				formData: {
-					realName: '',
-					subjectId: '',
-					gender: 'M',
-					hourlyRate: '',
-					education: '',
-					university: '',
-					image: ''
-				},
-				genderOptions: [{
-						value: 'M',
-						text: '男'
-					},
-					{
-						value: 'W',
-						text: '女'
-					},
-				],
-				subjects: [{
-						value: '4',
-						text: '数学'
-					},
-					{
-						value: '6',
-						text: '语文'
-					},
-					{
-						value: '5',
-						text: '英语'
-					},
-					{
-						value: '3',
-						text: '物理'
-					},
-					{
-						value: '2',
-						text: '化学'
-					},
-					{
-						value: '1',
-						text: '历史'
-					}
-				],
-				educationOptions: [{
-						value: '本科',
-						text: '本科'
-					},
-					{
-						value: '研究生',
-						text: '硕士'
-					},
-					{
-						value: '博士生',
-						text: '博士'
-					}
-				],
-				selectedSubject: '',
-				selectedEducation: ''
-			}
-		},
-		computed: {
-			subjectOptions() {
-				return this.subjects.map(item => item.text);
-			}
-		},
-		methods: {
-			handleGenderChange(e) {
-				var index = e.detail.value;
-				this.formData.gender = this.genderOptions[index].value;
-			},
-			handleSubjectChange(e) {
-				const index = e.detail.value;
-				this.formData.subjectId = this.subjects[index].value;
-				this.selectedSubject = this.subjects[index].text;
-				console.log(this.formData.subject);
-			},
-			handleEducationChange(e) {
-				const index = e.detail.value;
-				this.formData.education = this.educationOptions[index].value;
-				this.selectedEducation = this.educationOptions[index].text;
-			},
-			uploadAvatar() {
-				const _this = this;
-				uni.chooseImage({
-					count: 1,
-					sizeType: ['compressed'],
-					sourceType: ['album', 'camera'],
-					success(res) {
-						
-						_this.formData.avatarUrl = res.tempFilePaths[0];
-					}
-				});
-			},
-			handleSubmit() {
-
-				teacherJoin(this.formData).then(res => {
-					if (res.code === 200) {
-						uni.showToast({
-							title: '提交成功',
-							icon: 'success'
-						});
-					} else {
-						uni.showToast({
-							title: '提交失败',
-							icon: 'error'
-						});
-					}
-				})
-			}
-		}
-	}
-</script>
- -->
 
 <script>
 	import {
@@ -260,14 +152,28 @@
 	} from '@/api/teacherJoin/teacherJoin'
 	import {
 		getToken
-	} from '@/utils/auth' // 引入获取token的方法
+	} from '@/utils/auth'
+	import {
+		findAllArea
+	} from '@/api/teacher/area'
+	import {
+		findAllGrade
+	} from '@/api/teacher/grade'
+	import {
+		findAllSubject
+	} from '@/api/teacher/subject'
 
 	export default {
 		data() {
 			return {
-				uploading: false, // 添加上传状态
+				uploading: false,
+				areaRows: [],
+				gradeRows: [],
+				subjectRows: [],
 				formData: {
 					realName: '',
+					areaId: '',
+					gradeId: '',
 					subjectId: '',
 					gender: 'M',
 					hourlyRate: '',
@@ -284,31 +190,6 @@
 						text: '女'
 					}
 				],
-				subjects: [{
-						value: '4',
-						text: '数学'
-					},
-					{
-						value: '6',
-						text: '语文'
-					},
-					{
-						value: '5',
-						text: '英语'
-					},
-					{
-						value: '3',
-						text: '物理'
-					},
-					{
-						value: '2',
-						text: '化学'
-					},
-					{
-						value: '1',
-						text: '历史'
-					}
-				],
 				educationOptions: [{
 						value: '本科',
 						text: '本科'
@@ -322,24 +203,72 @@
 						text: '博士'
 					}
 				],
+				selectedArea: '',
+				selectedGrade: '',
 				selectedSubject: '',
 				selectedEducation: ''
 			}
 		},
+		mounted() {
+			this.loadDicts()
+		},
 		computed: {
+			areaOptions() {
+				return this.areaRows.map(item => item.name)
+			},
+			gradeOptions() {
+				return this.gradeRows.map(item => item.name)
+			},
 			subjectOptions() {
-				return this.subjects.map(item => item.text);
+				return this.subjectRows.map(item => item.name)
 			}
 		},
 		methods: {
+			async loadDicts() {
+				try {
+					const [ar, gr, sr] = await Promise.all([
+						findAllArea(),
+						findAllGrade(),
+						findAllSubject()
+					])
+					this.areaRows = ar.data || []
+					this.gradeRows = gr.data || []
+					this.subjectRows = sr.data || []
+				} catch (e) {
+					console.error(e)
+					uni.showToast({
+						title: '选项加载失败，请下拉重试',
+						icon: 'none'
+					})
+				}
+			},
 			handleGenderChange(e) {
 				const index = e.detail.value;
 				this.formData.gender = this.genderOptions[index].value;
 			},
+			handleAreaChange(e) {
+				const index = parseInt(e.detail.value, 10)
+				const row = this.areaRows[index]
+				if (row) {
+					this.formData.areaId = row.areaId
+					this.selectedArea = row.name
+				}
+			},
+			handleGradeChange(e) {
+				const index = parseInt(e.detail.value, 10)
+				const row = this.gradeRows[index]
+				if (row) {
+					this.formData.gradeId = row.gradeId
+					this.selectedGrade = row.name
+				}
+			},
 			handleSubjectChange(e) {
-				const index = e.detail.value;
-				this.formData.subjectId = this.subjects[index].value;
-				this.selectedSubject = this.subjects[index].text;
+				const index = parseInt(e.detail.value, 10)
+				const row = this.subjectRows[index]
+				if (row) {
+					this.formData.subjectId = row.subjectId
+					this.selectedSubject = row.name
+				}
 			},
 			handleEducationChange(e) {
 				const index = e.detail.value;
@@ -414,6 +343,14 @@
 						message: '请输入真实姓名'
 					},
 					{
+						field: 'areaId',
+						message: '请选择所在地区'
+					},
+					{
+						field: 'gradeId',
+						message: '请选择授课年级'
+					},
+					{
 						field: 'subjectId',
 						message: '请选择教学科目'
 					},
@@ -464,24 +401,25 @@
 				// 准备提交数据（如果后端只需要相对路径）
 				const submitData = {
 					...this.formData,
-					image: this.formData.image.replace(baseUrl, '') // 去掉baseUrl部分
-				};
+					image: this.formData.image.replace(baseUrl, '')
+				}
+				const sid = parseInt(submitData.subjectId, 10)
+				if (!isNaN(sid)) {
+					submitData.subjectId = sid
+				}
 
 				teacherJoin(submitData).then(res => {
 					uni.hideLoading();
 					if (res.code === 200) {
-						uni.switchTab({
-							url: '/pages/findteacher/findteacher/findteacher'
-						});
-						uni.showToast({
+						uni.showModal({
 							title: '提交成功',
-							icon: 'success',
-							duration: 2000,
+							content: '您的入驻信息已提交，管理员审核通过前不会在「找老师」中展示。您可在「找老师」中关注列表更新。',
+							showCancel: false,
 							success: () => {
-								// 2秒后重置表单
-								setTimeout(() => {
-									this.resetForm();
-								}, 2000);
+								this.resetForm();
+								uni.switchTab({
+									url: '/pages/findteacher/findteacher/findteacher'
+								});
 							}
 						});
 					} else {
@@ -505,15 +443,19 @@
 			resetForm() {
 				this.formData = {
 					realName: '',
+					areaId: '',
+					gradeId: '',
 					subjectId: '',
 					gender: 'M',
 					hourlyRate: '',
 					education: '',
 					university: '',
 					image: ''
-				};
-				this.selectedSubject = '';
-				this.selectedEducation = '';
+				}
+				this.selectedArea = ''
+				this.selectedGrade = ''
+				this.selectedSubject = ''
+				this.selectedEducation = ''
 			}
 		}
 	}

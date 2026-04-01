@@ -36,6 +36,7 @@
 			<!-- 添加空状态视图 -->
 			<view v-if="teacherList.length === 0 && loadStatus !== 'loading'" class="empty-state">
 				<text class="empty-text">未找到符合条件的老师</text>
+				<text class="empty-hint">若您已提交「老师入驻」，需管理员在后台将教师审核状态设为「通过」后，才会出现在此列表。</text>
 			</view>
 
 			<view v-else>
@@ -82,154 +83,156 @@
 	} from '@/api/teacher/getTeacherMag'
 	import {
 		baseUrl
-	} from '../../../config';
+	} from '../../../config'
 
 	export default {
 		data() {
 			return {
 				searchText: '',
 				activeDropdown: null,
-				subjectList: [{
-						value: '4',
-						text: '数学'
-					},
-					{
-						value: '6',
-						text: '语文'
-					},
-					{
-						value: '5',
-						text: '英语'
-					},
-					{
-						value: '3',
-						text: '物理'
-					},
-					{
-						value: '2',
-						text: '化学'
-					},
-					{
-						value: '1',
-						text: '历史'
-					}
-				],
+				areaRows: [],
+				gradeRows: [],
+				subjectRows: [],
 				filterOptions: {
 					area: [],
 					grade: [],
-					subject: [],
+					subject: []
 				},
-				activeFilters: { // 添加筛选状态对象
+				activeFilters: {
 					area: '',
 					grade: '',
-					subject: '',
+					subject: ''
 				},
-
-				teacherList: [{
-					name: '张老师',
-					image: '',
-					type: '金牌讲师',
-					subjects: '高中数学',
-					tags: ['重点中学', '高考冲刺', '提分快'],
-					price: 200,
-				}],
-				total: 20,
+				teacherList: [],
+				total: 0,
 				page: 1,
-				pageSize: 4,
-				loadStatus: 'loadmore'
+				pageSize: 10,
+				loadStatus: 'loadmore',
+				filtersReady: false
 			}
 		},
-
 		mounted() {
-			this.loadMore();
-			this.init();
+			this.bootstrap()
 		},
 		methods: {
-			init() {
-				findAllArea().then(res => {
-						this.filterOptions.area = ['全部', ...res.data.map(item => item.name)];
-					}),
-					findAllGrade().then(res => {
-						this.filterOptions.grade = ['全部', ...res.data.map(item => item.name)];
-					}),
-					this.filterOptions.subject = ['全部', ...this.subjectList.map(item => item.text)];
-				getTeacherMag().then(res => {
-					this.teacherList = res.rows;
-				})
-
+			async bootstrap() {
+				try {
+					await this.loadFilterOptions()
+				} catch (e) {
+					console.error(e)
+				} finally {
+					this.filtersReady = true
+					this.refreshList()
+				}
+			},
+			async loadFilterOptions() {
+				const [ar, gr, sr] = await Promise.all([
+					findAllArea(),
+					findAllGrade(),
+					findAllSubject()
+				])
+				this.areaRows = ar.data || []
+				this.gradeRows = gr.data || []
+				this.subjectRows = sr.data || []
+				this.filterOptions.area = ['全部', ...this.areaRows.map(i => i.name)]
+				this.filterOptions.grade = ['全部', ...this.gradeRows.map(i => i.name)]
+				this.filterOptions.subject = ['全部', ...this.subjectRows.map(i => i.name)]
+			},
+			resolveAreaId(name) {
+				if (!name) return undefined
+				const r = this.areaRows.find(i => i.name === name)
+				return r ? r.areaId : undefined
+			},
+			resolveGradeId(name) {
+				if (!name) return undefined
+				const r = this.gradeRows.find(i => i.name === name)
+				return r ? r.gradeId : undefined
+			},
+			resolveSubjectId(name) {
+				if (!name) return undefined
+				const r = this.subjectRows.find(i => i.name === name)
+				if (!r || r.subjectId == null || r.subjectId === '') return undefined
+				const n = parseInt(r.subjectId, 10)
+				return isNaN(n) ? undefined : n
 			},
 			getImage(url) {
-				return baseUrl + url;
+				if (!url) return ''
+				if (String(url).startsWith('http')) return url
+				return baseUrl + url
 			},
 			goToTeacherDetail(input) {
 				uni.navigateTo({
 					url: `/pages/findteacher/findteacher/teacherDetail/teacherDetail?id=${input}`
-				});
+				})
+			},
+			refreshList() {
+				this.page = 1
+				this.teacherList = []
+				this.loadStatus = 'loadmore'
+				this.loadMore()
 			},
 			handleSearch() {
-				this.page = 1;
-				this.teacherList = []; // 清空列表
-				this.loadStatus = 'loadmore'; // 修复：重置加载状态，确保可以发起新搜索
-				this.loadMore();
+				this.refreshList()
+			},
+			clearSearch() {
+				this.searchText = ''
+				this.handleSearch()
 			},
 			toggleFilterDropdown(groupKey) {
 				this.activeDropdown = this.activeDropdown === groupKey ? null : groupKey
 			},
 			toggleFilter(type, value) {
 				if (value === '全部' || this.activeFilters[type] === value) {
-					this.activeFilters[type] = '';
+					this.activeFilters[type] = ''
 				} else {
-					this.activeFilters[type] = value;
+					this.activeFilters[type] = value
 				}
-
-				if (type === 'subject') {
-					this.handleSearch();
-				}
-
-				this.activeDropdown = null;
+				this.activeDropdown = null
+				this.handleSearch()
 			},
 			async loadMore() {
-				if (this.loadStatus === 'nomore') return;
-				this.loadStatus = 'loading';
-
+				if (!this.filtersReady) return
+				if (this.loadStatus === 'nomore' || this.loadStatus === 'loading') return
+				this.loadStatus = 'loading'
 				try {
 					const params = {
 						pageNum: this.page,
-						// pageSize: this.pageSize,
-						realName: this.searchText, // 姓名查询参数
-					};
-
-					// 仅添加科目筛选参数
-					if (this.activeFilters.subject) {
-						const selectedSubject = this.subjectList.find(s => s.text === this.activeFilters.subject);
-						if (selectedSubject) {
-							params.subjectId = selectedSubject.value;
-						}
+						pageSize: this.pageSize
 					}
-
-					console.log('向后端发送的查询参数:', params); // 在此处添加日志
-
-					const res = await getTeacherMag(params);
-
+					if (this.searchText) {
+						params.realName = this.searchText
+					}
+					const sid = this.resolveSubjectId(this.activeFilters.subject)
+					if (sid != null) {
+						params.subjectId = sid
+					}
+					// 仅展示已审核通过教师（与管理端约定：1=通过；0=待审）
+					params.status = 1
+					const aid = this.resolveAreaId(this.activeFilters.area)
+					if (aid) {
+						params.areaId = aid
+					}
+					const gid = this.resolveGradeId(this.activeFilters.grade)
+					if (gid) {
+						params.gradeId = gid
+					}
+					const res = await getTeacherMag(params)
+					const rows = res.rows || []
 					if (this.page === 1) {
-						this.teacherList = res.rows;
+						this.teacherList = rows
 					} else {
-						this.teacherList = [...this.teacherList, ...res.rows];
+						this.teacherList = [...this.teacherList, ...rows]
 					}
-
-					this.total = res.total;
-					this.page++;
-
-					// 判断是否还有更多数据
-					if (this.teacherList.length >= this.total) {
-						this.loadStatus = 'nomore';
+					this.total = res.total != null ? res.total : 0
+					this.page++
+					if (rows.length === 0 || this.teacherList.length >= this.total) {
+						this.loadStatus = 'nomore'
 					} else {
-						this.loadStatus = 'loadmore';
+						this.loadStatus = 'loadmore'
 					}
-
 				} catch (error) {
-					console.error('加载教师数据失败:', error);
-					this.loadStatus = 'loadmore';
+					console.error('加载教师数据失败:', error)
+					this.loadStatus = 'loadmore'
 				}
 			}
 		}
@@ -253,6 +256,15 @@
 	.empty-text {
 		color: #999;
 		font-size: 28rpx;
+	}
+
+	.empty-hint {
+		margin-top: 24rpx;
+		padding: 0 48rpx;
+		color: #bbb;
+		font-size: 24rpx;
+		line-height: 1.5;
+		text-align: center;
 	}
 
 	/* 搜索框样式修改 */

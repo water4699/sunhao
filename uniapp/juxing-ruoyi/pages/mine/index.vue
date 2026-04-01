@@ -30,6 +30,12 @@
 				<uni-icons type="right" size="16" color="#ccc" />
 			</view>
 
+			<view class="function-box" @click="handleReviewClick">
+				<uni-icons type="chatboxes" size="22" color="#666" />
+				<text class="function-text">家长评价</text>
+				<uni-icons type="right" size="16" color="#ccc" />
+			</view>
+
 			<view class="function-box" @click="handleVipClick">
 				<uni-icons type="vip" size="22" color="#666" />
 				<text class="function-text">我的会员卡</text>
@@ -92,6 +98,9 @@
 			},
 			handleOrderClick() {
 				this.$tab.navigateTo('/pages/mine/order/order')
+			},
+			handleReviewClick() {
+				this.$tab.navigateTo('/pages/review/review')
 			},
 			handleVipClick() {
 				uni.showToast({ title: '会员卡功能暂未开放', icon: 'none' })
