@@ -41,6 +41,26 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="地区" prop="areaId">
+        <el-select v-model="queryParams.areaId" clearable filterable placeholder="全部" style="width: 160px">
+          <el-option
+            v-for="o in areaOptions"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="年级" prop="gradeId">
+        <el-select v-model="queryParams.gradeId" clearable filterable placeholder="全部" style="width: 160px">
+          <el-option
+            v-for="o in gradeOptions"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
+        </el-select>
+      </el-form-item>
 <!--&lt;!&ndash;      <el-form-item label="时间" prop="creatTime">&ndash;&gt;-->
 <!--&lt;!&ndash;        <el-date-picker clearable&ndash;&gt;-->
 <!--&lt;!&ndash;          v-model="queryParams.creatTime"&ndash;&gt;-->
@@ -110,6 +130,16 @@
       <el-table-column label="性别" align="center" prop="gender" />
       <el-table-column label="学历" align="center" prop="education" />
       <el-table-column label="所在大学" align="center" prop="university" />
+      <el-table-column label="地区" align="center" prop="areaId" width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ formatAreaName(scope.row.areaId) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="年级" align="center" prop="gradeId" width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ formatGradeName(scope.row.gradeId) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="时薪" align="center" prop="hourlyRate" />
       <el-table-column label="平均评分" align="center" prop="rating" />
       <el-table-column label="认证状态" align="center" prop="status" />
@@ -153,10 +183,30 @@
     />
 
     <!-- 添加或修改教师信息对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-dialog :title="title" :visible.sync="open" width="560px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="关联科目" prop="subjectId">
-          <el-input v-model="form.subjectId" placeholder="请输入关联科目" />
+          <el-input v-model="form.subjectId" placeholder="请输入科目ID" />
+        </el-form-item>
+        <el-form-item label="所在地区" prop="areaId">
+          <el-select v-model="form.areaId" clearable filterable placeholder="请选择（可与地图API对接）" style="width: 100%">
+            <el-option
+              v-for="o in areaOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="授课年级" prop="gradeId">
+          <el-select v-model="form.gradeId" clearable filterable placeholder="请选择" style="width: 100%">
+            <el-option
+              v-for="o in gradeOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="学历" prop="education">
           <el-select v-model="form.education" placeholder="请选择">
@@ -202,11 +252,17 @@
 
 <script>
 import { listTeacher, getTeacher, delTeacher, addTeacher, updateTeacher } from "@/api/my/teacher"
+import { listJinan } from "@/api/my/jinan"
+import { listLevel } from "@/api/my/level"
 
 export default {
   name: "Teacher",
   data() {
     return {
+      areaOptions: [],
+      gradeOptions: [],
+      areaNameMap: {},
+      gradeNameMap: {},
 
       // 遮罩层
       loading: true,
@@ -240,7 +296,9 @@ export default {
         rating: null,
         status: null,
         image: null,
-        creatTime: null
+        creatTime: null,
+        areaId: null,
+        gradeId: null
       },
       // 学历下拉框备选数据
       educations: [{
@@ -289,9 +347,44 @@ export default {
     }
   },
   created() {
+    this.loadAreaGradeDict()
     this.getList()
   },
   methods: {
+    loadAreaGradeDict() {
+      listJinan({ pageNum: 1, pageSize: 999 }).then(res => {
+        const rows = res.rows || []
+        this.areaOptions = rows.map(r => ({
+          label: r.name,
+          value: r.areaId != null ? String(r.areaId) : ""
+        })).filter(o => o.value)
+        const m = {}
+        rows.forEach(r => {
+          if (r.areaId != null) m[String(r.areaId)] = r.name
+        })
+        this.areaNameMap = m
+      })
+      listLevel({ pageNum: 1, pageSize: 999 }).then(res => {
+        const rows = res.rows || []
+        this.gradeOptions = rows.map(r => ({
+          label: r.name,
+          value: r.gradeId != null ? String(r.gradeId) : ""
+        })).filter(o => o.value)
+        const m = {}
+        rows.forEach(r => {
+          if (r.gradeId != null) m[String(r.gradeId)] = r.name
+        })
+        this.gradeNameMap = m
+      })
+    },
+    formatAreaName(id) {
+      if (id == null || id === "") return "-"
+      return this.areaNameMap[String(id)] || id
+    },
+    formatGradeName(id) {
+      if (id == null || id === "") return "-"
+      return this.gradeNameMap[String(id)] || id
+    },
     /** 查询教师信息列表 */
     getList() {
       this.loading = true
@@ -320,7 +413,9 @@ export default {
         rating: null,
         status: null,
         image: null,
-        creatTime: null
+        creatTime: null,
+        areaId: null,
+        gradeId: null
       }
       this.resetForm("form")
     },
@@ -351,7 +446,14 @@ export default {
       this.reset()
       const teacherId = row.teacherId || this.ids
       getTeacher(teacherId).then(response => {
-        this.form = response.data
+        const d = response.data || {}
+        this.form = { ...d }
+        if (this.form.areaId != null && this.form.areaId !== "") {
+          this.form.areaId = String(this.form.areaId)
+        }
+        if (this.form.gradeId != null && this.form.gradeId !== "") {
+          this.form.gradeId = String(this.form.gradeId)
+        }
         this.open = true
         this.title = "修改教师信息"
       })

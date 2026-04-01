@@ -94,7 +94,7 @@
 				this.$tab.navigateTo('/pages/mine/order/order')
 			},
 			handleVipClick() {
-				this.$tab.navigateTo('/pages/mine/card/card/card')
+				uni.showToast({ title: '会员卡功能暂未开放', icon: 'none' })
 			},
 			
 		}
