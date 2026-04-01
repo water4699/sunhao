@@ -4,6 +4,11 @@
 -- 适用：从 Navicat 导出的 juxing-master 或同类库；执行前请全库备份。
 -- MySQL 5.7+ / 8.0
 --
+-- 设计约定（与业务划分一致）：
+--   sys_user / sys_role / sys_user_role：仅服务于「管理端若依」登录与后台权限。
+--   家长端、教师端、订单、会员等业务用户与外键：以业务表为准（如 users、user、student 等），
+--   不要将 order.user_id、teacher.user_id 等强行改为引用 sys_user，除非单独做账号合并与数据迁移。
+--
 -- 内容概览：
 --   1) 安全补列：teacher.area_id/grade_id、course.address、product 缺列时补 stock/image
 --   2) review.status：由 enum(pending/approved/rejected) 转为与代码一致的 0/1/2
