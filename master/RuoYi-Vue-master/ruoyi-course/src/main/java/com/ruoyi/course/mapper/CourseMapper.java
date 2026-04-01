@@ -55,4 +55,9 @@ public interface CourseMapper
      * @return 结果
      */
     public int deleteCourseByCourseIds(String[] courseIds);
+
+    /**
+     * 同一学生、教师、上课日期的有效预约数量（排除已取消 status=2）
+     */
+    public int countActiveBookingSameSlot(Course course);
 }

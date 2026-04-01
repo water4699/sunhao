@@ -19,5 +19,10 @@
         <groupId>com.ruoyi</groupId>
         <artifactId>ruoyi-common</artifactId>
     </dependency>
+    <dependency>
+        <groupId>com.ruoyi</groupId>
+        <artifactId>ruoyi-course</artifactId>
+        <version>3.9.0</version>
+    </dependency>
 </dependencies>
 </project>

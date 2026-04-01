@@ -1,6 +1,7 @@
 package com.ruoyi.review.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.review.domain.Review;
 
 /**
@@ -58,4 +59,6 @@ public interface ReviewMapper
 
     String selectStudentByStudentId(Integer studentId);
 //    String selectTeacherByTeacherId(Integer teacherId);
+
+    int countByStudentIdAndBookingId(@Param("studentId") Integer studentId, @Param("bookingId") String bookingId);
 }

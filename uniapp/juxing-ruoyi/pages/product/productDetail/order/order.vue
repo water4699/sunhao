@@ -11,7 +11,7 @@
 					<view class="goods-name">{{ goodsInfo.name }}</view>
 					<view class="goods-desc">{{ goodsInfo.description }}</view>
 					<view class="price-section">
-						<text class="price-label">价格</text>
+						<text class="price-label">单价</text>
 						<text class="goods-price">¥{{ goodsInfo.price }}</text>
 					</view>
 					<view class="count-section">
@@ -26,129 +26,96 @@
 			</view>
 			<view class="total-section">
 				<text class="total-label">合计</text>
-				<text class="total-price">¥{{ goodsInfo.price * count }}</text>
+				<text class="total-price">¥{{ totalPrice }}</text>
 			</view>
 		</view>
 		<view class="footer">
 			<view class="btn cancel" @click="cancel">取消</view>
-			<view class="btn confirm" @click="confirm">确认支付</view>
+			<view class="btn confirm" @click="confirm">确认支付（模拟）</view>
 		</view>
 	</view>
 </template>
 
 <script>
-	import {
-		getOneProduct
-	} from '@/api/Product/findAllProduct'
-	import {
-		baseUrl
-	} from '../../../../config';
-	import {
-		getInfo
-	} from '../../../../api/login';
+import { getOneProduct } from '@/api/Product/findAllProduct'
+import { createAppProductOrder } from '@/api/order/order'
+import { getToken } from '@/utils/auth'
+import { baseUrl } from '../../../../config'
 
-	export default {
-		data() {
-			return {
-				id: '', // 商品ID
-				count: 1,
-				goodsInfo: {
-					name: '',
-					price: 0,
-					description: '',
-					image: ''
-				},
-
+export default {
+	data() {
+		return {
+			id: '',
+			count: 1,
+			goodsInfo: {
+				name: '',
+				price: 0,
+				description: '',
+				image: ''
 			}
+		}
+	},
+	computed: {
+		totalPrice() {
+			const p = Number(this.goodsInfo.price) || 0
+			return (p * this.count).toFixed(2)
+		}
+	},
+	onLoad(options) {
+		this.id = (options && options.id) ? options.id : ''
+		this.init()
+	},
+	methods: {
+		init() {
+			if (!this.id) return
+			getOneProduct(this.id).then(res => {
+				const msg = res.data
+				if (!msg) return
+				this.goodsInfo.name = msg.name
+				this.goodsInfo.image = msg.image ? baseUrl + msg.image : ''
+				this.goodsInfo.price = msg.price
+				this.goodsInfo.description = msg.description || ''
+			})
 		},
-
-		onLoad(options) {
-			// 获取商品ID参数
-			console.log('接收到的参数:', options.id); // 应该能打印出 id
-			this.id = options.id;
-			this.init();
-
-
-			初始化本地存储
-			this.$storage = {
-				set: function(key, value) {
-					try {
-						uni.setStorageSync(key, value)
-					} catch (e) {
-						console.error(e)
-					}
-				},
-				get: function(key) {
-					try {
-						return uni.getStorageSync(key)
-					} catch (e) {
-						console.error(e)
-						return null
-					}
-				}
+		addCount() {
+			this.count++
+		},
+		reduceCount() {
+			if (this.count > 1) this.count--
+		},
+		cancel() {
+			uni.navigateBack()
+		},
+		confirm() {
+			if (!getToken()) {
+				uni.showToast({ title: '请先登录', icon: 'none' })
+				return
 			}
-		},
-		methods: {
-			// 初始化数据
-			init() {
-				getOneProduct(this.id).then(res => {
-					var msg = res.data;
-					console.log(msg);
-					this.goodsInfo.name = msg.name;
-					this.goodsInfo.image = baseUrl + msg.image;
-					this.goodsInfo.price = msg.price;
-					this.goodsInfo.description = msg.description;
-				})
-			},
-
-			addCount() {
-				this.count++
-			},
-			reduceCount() {
-				if (this.count > 1) {
-					this.count--
-				}
-			},
-			cancel() {
-				uni.navigateBack()
-			},
-			confirm() {
-				const orderInfo = {
-					goods: this.goodsInfo,
-					count: this.count,
-					total: this.goodsInfo.price * this.count,
-					time: new Date().getTime()
-				}
-				// this.$storage.set('currentOrder', orderInfo)
-
-				// uni.showToast({
-				// 	title: '购买成功',
-				// 	icon: 'success'
-				// })
+			if (!this.id) {
+				uni.showToast({ title: '商品无效', icon: 'none' })
+				return
+			}
+			createAppProductOrder({
+				productId: this.id,
+				quantity: this.count
+			}).then(() => {
 				uni.showToast({
-					title: '购买成功',
+					title: '支付成功',
 					icon: 'success',
 					duration: 1500,
 					success: () => {
-						// 在 toast 消失后跳转
 						setTimeout(() => {
-							uni.switchTab({
-								url: `/pages/product/product`
-							})
+							uni.switchTab({ url: '/pages/mine/index' })
 						}, 1500)
 					}
 				})
-				// setTimeout(() => {
-				// 	uni.navigateBack()
-				// }, 1500)
-			}
-		},
-
+			}).catch(() => {})
+		}
 	}
+}
 </script>
 
 <style>
-	/* 样式保持不变 */
 	page {
 		height: 100%;
 		background-color: #f7f7f7;

@@ -4,6 +4,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.ruoyi.common.utils.SecurityUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,6 +17,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.order.domain.AppProductOrderRequest;
 import com.ruoyi.order.domain.Order;
 import com.ruoyi.order.service.IOrderService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
@@ -75,6 +77,30 @@ public class OrderController extends BaseController
     public AjaxResult add(@RequestBody Order order)
     {
         return toAjax(orderService.insertOrder(order));
+    }
+
+    /**
+     * 小程序：创建商品订单（模拟支付成功）
+     */
+    @PostMapping("/app/product")
+    public AjaxResult appCreateProductOrder(@RequestBody AppProductOrderRequest body)
+    {
+        Long uid = SecurityUtils.getUserId();
+        String orderId = orderService.createProductOrderForUser(uid, body.getProductId(), body.getQuantity());
+        return AjaxResult.success(orderId);
+    }
+
+    /**
+     * 小程序：当前登录用户的商品订单列表（分页参数与通用 list 一致）
+     */
+    @GetMapping("/app/list")
+    public TableDataInfo appList()
+    {
+        startPage();
+        Order q = new Order();
+        q.setUserId(String.valueOf(SecurityUtils.getUserId()));
+        List<Order> list = orderService.selectOrderList(q);
+        return getDataTable(list);
     }
 
     /**

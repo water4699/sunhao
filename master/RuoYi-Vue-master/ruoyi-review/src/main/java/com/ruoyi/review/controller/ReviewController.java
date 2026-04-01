@@ -88,6 +88,38 @@ public class ReviewController extends BaseController
     }
 
     /**
+     * 小程序端提交评价（已登录即可，无需菜单权限；业务校验在 Service）
+     */
+    @PostMapping("/app/submit")
+    public AjaxResult appSubmit(@RequestBody Review review)
+    {
+        return toAjax(reviewService.submitReviewByLoginUser(review));
+    }
+
+    /**
+     * 小程序端评价列表：仅展示已审核通过（status=1）；可选按教师筛选 teacherId
+     */
+    @GetMapping("/app/list")
+    public TableDataInfo appList(Review review)
+    {
+        startPage();
+        Review q = new Review();
+        if (review != null && review.getTeacherId() != null)
+        {
+            q.setTeacherId(review.getTeacherId());
+        }
+        q.setStatus("1");
+        List<Review> reviewList = reviewService.selectReviewList(q);
+        List<ReviewVo> list = reviewList.stream().map(review1 -> {
+            ReviewVo reviewVo = new ReviewVo();
+            BeanUtils.copyBeanProp(reviewVo, review1);
+            reviewVo.setStudentName(reviewService.selectStudentByStudentId(review1.getStudentId()));
+            return reviewVo;
+        }).collect(Collectors.toList());
+        return getDataTable(list);
+    }
+
+    /**
      * 修改评价
      */
     @PreAuthorize("@ss.hasPermi('system:review:edit')")

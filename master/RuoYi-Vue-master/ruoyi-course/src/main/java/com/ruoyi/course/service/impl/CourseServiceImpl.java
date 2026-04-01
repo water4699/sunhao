@@ -3,6 +3,8 @@ package com.ruoyi.course.service.impl;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.course.mapper.CourseMapper;
 import com.ruoyi.course.domain.Course;
 import com.ruoyi.course.service.ICourseService;
@@ -49,7 +51,22 @@ public class CourseServiceImpl implements ICourseService
     @Override
     public int insertCourse(Course course)
     {
+        validateNoDuplicateBooking(course);
         return courseMapper.insertCourse(course);
+    }
+
+    private void validateNoDuplicateBooking(Course course)
+    {
+        if (course == null || StringUtils.isEmpty(course.getStudentId())
+            || StringUtils.isEmpty(course.getTeacherId()) || course.getStartDate() == null)
+        {
+            return;
+        }
+        int n = courseMapper.countActiveBookingSameSlot(course);
+        if (n > 0)
+        {
+            throw new ServiceException("您已在该日期预约过这位老师，请勿重复预约");
+        }
     }
 
     /**

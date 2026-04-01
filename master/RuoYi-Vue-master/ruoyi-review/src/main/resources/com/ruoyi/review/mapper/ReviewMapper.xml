@@ -87,6 +87,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectStudentByStudentId" resultType="java.lang.String">
         select real_name from student where student_id = #{studentId}
     </select>
+
+    <select id="countByStudentIdAndBookingId" resultType="int">
+        select count(*) from review
+        where student_id = #{studentId} and booking_id = #{bookingId}
+    </select>
 <!--        <select id="selectTeacherByTeacherId" resultType="java.lang.String">-->
 <!--        select real_name from teacher where teacher_id = #{teacherId}-->
 <!--    </select>-->

@@ -55,4 +55,9 @@ public interface IOrderService
      * @return 结果
      */
     public int deleteOrderByOrderId(String orderId);
+
+    /**
+     * 小程序：模拟支付创建商品订单；order.courseId 字段存放 productId
+     */
+    public String createProductOrderForUser(Long userId, String productId, Integer quantity);
 }

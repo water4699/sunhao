@@ -96,10 +96,14 @@
                 console.log('当前分类:', category);
             },
             handleBuyClick(item) {
-                uni.showToast({
-                    title: `已加入购物车：${item.name}`,
-                    icon: 'none'
-                });
+                const id = item.productId
+                if (!id) {
+                    uni.showToast({ title: '商品信息异常', icon: 'none' })
+                    return
+                }
+                uni.navigateTo({
+                    url: `/pages/product/productDetail/order/order?id=${id}`
+                })
             },
             findProductDetail(input){
                 console.log(input);

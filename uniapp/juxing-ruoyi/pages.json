@@ -138,6 +138,13 @@
 		}
 	},
 	{
+		"path" : "pages/review/reviewSubmit",
+		"style" : 
+		{
+			"navigationBarTitleText" : "发表评价"
+		}
+	},
+	{
 		"path" : "pages/product/productDetail/product_det",
 		"style" : 
 		{

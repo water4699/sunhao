@@ -60,4 +60,9 @@ public interface IReviewService
 
     String selectStudentByStudentId(Integer studentId);
 //    String selectTeacherByTeacherId(Integer teacherId);
+
+    /**
+     * 小程序/已登录用户提交评价：校验预约归属与课程状态后入库（默认待审核 status=0）
+     */
+    public int submitReviewByLoginUser(Review review);
 }

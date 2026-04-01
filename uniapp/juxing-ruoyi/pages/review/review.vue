@@ -37,83 +37,42 @@
 
 <script>
 	import {
-		getReviewMag
+		getReviewAppList
 	} from '@/api/review/review'
-	import {
-		baseUrl
-	} from '../../config'
-	
+
 export default {
   data() {
     return {
-      // 评论列表数据保持不变
-      reviewList: [
-        {
-          studentName: "陈雅婷",
-          createdAt: "2024-01-15 14:30",
-          rating: 4.8,
-          comment: "王老师的教学方法非常适合我家孩子，讲课细致入微，善于引导思考。经过半年的辅导，孩子的数学成绩有了很大提升，特别感谢！",
-        },
-      ],
-      isLoadingMore: false,
-    };
+      reviewList: [],
+      isLoadingMore: false
+    }
   },
-mounted() {
-			this.init();
-		},
+  mounted() {
+    this.loadList()
+  },
+  onPullDownRefresh() {
+    this.loadList().finally(() => {
+      uni.stopPullDownRefresh()
+    })
+  },
   methods: {
-	  init() {
-	  	getReviewMag().then(res => {
-	  		this.reviewList = res.rows;
-	  	})
-	  },
-    // 下拉刷新逻辑保持不变
-    onPullDownRefresh() {
-      setTimeout(() => {
-        this.commentList.unshift({
-          avatar: "/static/default-avatar.png",
-          username: "新用户",
-          time: "2024-01-16 10:00",
-          score: 4.6,
-          content: "新的评价内容...",
-        });
-        uni.stopPullDownRefresh();
-      }, 1000);
+    loadList() {
+      return getReviewAppList({
+        pageNum: 1,
+        pageSize: 50
+      }).then(res => {
+        this.reviewList = res.rows || []
+      }).catch(() => {
+        this.reviewList = []
+      })
     },
-    // 上拉加载更多逻辑保持不变
-    onReachBottom() {
-      this.isLoadingMore = true;
-      setTimeout(() => {
-        const moreData = {
-          avatar: "/static/default-avatar.png",
-          username: "更多用户",
-          time: "2024-01-17 11:00",
-          score: 4.5,
-          content: "更多评价内容...",
-        };
-        this.commentList.push(moreData);
-        this.isLoadingMore = false;
-      }, 1000);
-    },
-    // 点击头像查看用户详情保持不变
     goUserDetail() {
       uni.navigateTo({
-        url: "/pages/user-detail/user-detail",
-      });
-    },
-    // 获取评论列表逻辑保持不变
-    getCommentList() {
-      // 实际项目中调用后端接口
-    },
-  },
-  // 页面事件处理函数保持不变
-  onPullDownRefresh() {
-    this.onPullDownRefresh();
-  },
-  onReachBottom() {
-    this.onReachBottom();
-  },
-};
+        url: '/pages/user-detail/user-detail'
+      })
+    }
+  }
+}
 </script>
 
 <style scoped>

@@ -1,8 +1,14 @@
 package com.ruoyi.review.service.impl;
 
+import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.course.domain.Course;
+import com.ruoyi.course.mapper.CourseMapper;
 import com.ruoyi.review.mapper.ReviewMapper;
 import com.ruoyi.review.domain.Review;
 import com.ruoyi.review.service.IReviewService;
@@ -14,6 +20,9 @@ import com.ruoyi.review.service.IReviewService;
 public class ReviewServiceImpl implements IReviewService {
     @Autowired
     private ReviewMapper reviewMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
 
     /**
      * 查询评价
@@ -85,6 +94,59 @@ public class ReviewServiceImpl implements IReviewService {
     @Override
     public String selectStudentByStudentId(Integer studentId) {
         return reviewMapper.selectStudentByStudentId(studentId);
+    }
+
+    @Override
+    public int submitReviewByLoginUser(Review review) {
+        if (review == null || StringUtils.isEmpty(review.getBookingId())) {
+            throw new ServiceException("请指定要评价的课程预约");
+        }
+        Long uid = SecurityUtils.getUserId();
+        int sid = uid.intValue();
+        Course course = courseMapper.selectCourseByCourseId(review.getBookingId());
+        if (course == null) {
+            throw new ServiceException("预约记录不存在");
+        }
+        if (!String.valueOf(uid).equals(course.getStudentId())) {
+            throw new ServiceException("只能评价自己的预约");
+        }
+        if (course.getStatus() == null || course.getStatus() != 1L) {
+            throw new ServiceException("仅在课程已确认后可评价");
+        }
+        if (reviewMapper.countByStudentIdAndBookingId(sid, review.getBookingId()) > 0) {
+            throw new ServiceException("该预约已提交过评价");
+        }
+        String rating = review.getRating();
+        if (StringUtils.isEmpty(rating)) {
+            throw new ServiceException("请选择评分");
+        }
+        int score;
+        try {
+            score = Integer.parseInt(rating.trim());
+        } catch (NumberFormatException e) {
+            throw new ServiceException("评分格式不正确");
+        }
+        if (score < 1 || score > 5) {
+            throw new ServiceException("评分需在 1～5 之间");
+        }
+        if (StringUtils.isEmpty(course.getTeacherId())) {
+            throw new ServiceException("预约缺少教师信息");
+        }
+        int tid;
+        try {
+            tid = Integer.parseInt(course.getTeacherId().trim());
+        } catch (NumberFormatException e) {
+            throw new ServiceException("教师编号格式异常");
+        }
+        Review row = new Review();
+        row.setStudentId(sid);
+        row.setTeacherId(tid);
+        row.setBookingId(review.getBookingId());
+        row.setRating(String.valueOf(score));
+        row.setComment(StringUtils.isEmpty(review.getComment()) ? "" : review.getComment().trim());
+        row.setStatus("0");
+        row.setCreatedAt(new Date());
+        return reviewMapper.insertReview(row);
     }
 
 //    @Override
