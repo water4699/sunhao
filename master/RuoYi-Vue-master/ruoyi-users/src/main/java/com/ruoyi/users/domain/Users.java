@@ -2,6 +2,7 @@ package com.ruoyi.users.domain;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
@@ -22,6 +23,10 @@ public class Users extends BaseEntity
     /** 手机号 */
     @Excel(name = "手机号")
     private String phone;
+
+    /** 登录密码（BCrypt，不落库展示） */
+    @JsonIgnore
+    private String password;
 
     /** 用户类型 */
     @Excel(name = "用户类型")
@@ -63,6 +68,16 @@ public class Users extends BaseEntity
     public String getPhone() 
     {
         return phone;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
     }
 
     public void setUsersType(String usersType) 

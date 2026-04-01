@@ -80,6 +80,22 @@ public class SysLoginController
     public AjaxResult getInfo()
     {
         LoginUser loginUser = SecurityUtils.getLoginUser();
+        if (loginUser.isBusinessUser())
+        {
+            SysUser user = loginUser.getUser();
+            Set<String> roles = new HashSet<>();
+            if (StringUtils.isNotEmpty(loginUser.getBusinessUsersType()))
+            {
+                roles.add(loginUser.getBusinessUsersType());
+            }
+            AjaxResult ajax = AjaxResult.success();
+            ajax.put("user", user);
+            ajax.put("roles", roles);
+            ajax.put("permissions", loginUser.getPermissions());
+            ajax.put("isDefaultModifyPwd", false);
+            ajax.put("isPasswordExpired", false);
+            return ajax;
+        }
         SysUser user = loginUser.getUser();
         // 角色集合
         Set<String> roles = permissionService.getRolePermission(user);

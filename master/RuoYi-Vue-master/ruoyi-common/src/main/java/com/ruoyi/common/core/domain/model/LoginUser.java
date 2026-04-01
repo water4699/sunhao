@@ -71,6 +71,14 @@ public class LoginUser implements UserDetails
      */
     private SysUser user;
 
+    /**
+     * 是否为业务端用户（家长/教师等，数据在 users 表，非 sys_user）
+     */
+    private boolean businessUser;
+
+    /** 业务用户类型：parent / teacher（与 users.users_type 一致） */
+    private String businessUsersType;
+
     public LoginUser()
     {
     }
@@ -256,6 +264,26 @@ public class LoginUser implements UserDetails
     public void setUser(SysUser user)
     {
         this.user = user;
+    }
+
+    public boolean isBusinessUser()
+    {
+        return businessUser;
+    }
+
+    public void setBusinessUser(boolean businessUser)
+    {
+        this.businessUser = businessUser;
+    }
+
+    public String getBusinessUsersType()
+    {
+        return businessUsersType;
+    }
+
+    public void setBusinessUsersType(String businessUsersType)
+    {
+        this.businessUsersType = businessUsersType;
     }
 
     @Override

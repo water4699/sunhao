@@ -20,6 +20,10 @@
       </view>
       <view class="input-item flex align-center">
         <view class="iconfont icon-user icon"></view>
+        <input v-model="registerForm.phone" class="input" type="number" placeholder="请输入手机号（用于验证码登录）" maxlength="11" />
+      </view>
+      <view class="input-item flex align-center">
+        <view class="iconfont icon-user icon"></view>
         <picker mode="selector" :range="roleLabels" :value="registerRoleIndex" @change="onRoleChange" class="role-picker">
           <view class="input role-picker-text">{{ roleLabels[registerRoleIndex] }}</view>
         </picker>
@@ -57,6 +61,7 @@
           username: "",
           password: "",
           confirmPassword: "",
+          phone: "",
           code: "",
           uuid: ""
         }
@@ -93,6 +98,10 @@
           this.$modal.msgError("请再次输入您的密码")
         } else if (this.registerForm.password !== this.registerForm.confirmPassword) {
           this.$modal.msgError("两次输入的密码不一致")
+        } else if (this.registerForm.phone === "") {
+          this.$modal.msgError("请输入手机号")
+        } else if (!/^1\d{10}$/.test(this.registerForm.phone)) {
+          this.$modal.msgError("手机号格式不正确")
         } else if (this.registerForm.code === "" && this.captchaEnabled) {
           this.$modal.msgError("请输入验证码")
         } else {
@@ -100,7 +109,7 @@
           this.register()
         }
       },
-      // 用户注册（绑定家长/教师角色，与 sys_role 一致）
+      // 用户注册：写入业务表 users（不经 sys_user）
       async register() {
         const payload = {
           ...this.registerForm,

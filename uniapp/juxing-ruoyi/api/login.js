@@ -1,9 +1,9 @@
 import request from '@/utils/request'
 
-// 登录方法
+// 业务端密码登录（users 表，非管理端 sys_user）
 export function login(loginForm) {
   return request({
-    'url': '/login',
+    'url': '/app/auth/login',
     headers: {
       isToken: false
     },

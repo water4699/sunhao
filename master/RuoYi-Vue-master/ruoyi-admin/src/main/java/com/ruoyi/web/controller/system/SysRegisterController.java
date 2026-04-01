@@ -10,6 +10,7 @@ import com.ruoyi.common.core.domain.model.RegisterBody;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.framework.web.service.SysRegisterService;
 import com.ruoyi.system.service.ISysConfigService;
+import com.ruoyi.users.service.IUsersAuthService;
 
 /**
  * 注册验证
@@ -24,6 +25,9 @@ public class SysRegisterController extends BaseController
 
     @Autowired
     private ISysConfigService configService;
+
+    @Autowired
+    private IUsersAuthService usersAuthService;
 
     @PostMapping("/register")
     public AjaxResult register(@RequestBody RegisterBody user)
@@ -46,7 +50,11 @@ public class SysRegisterController extends BaseController
         {
             return error("当前系统没有开启注册功能！");
         }
-        String msg = registerService.registerApp(user);
+        if (configService.selectCaptchaEnabled())
+        {
+            registerService.validateCaptcha(user.getUsername(), user.getCode(), user.getUuid());
+        }
+        String msg = usersAuthService.registerBusiness(user);
         return StringUtils.isEmpty(msg) ? success() : error(msg);
     }
 }

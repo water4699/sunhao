@@ -151,23 +151,6 @@ public class SysRegisterService
     }
 
     /**
-     * 小程序/移动端注册：必须指定家长或教师角色。
-     */
-    public String registerApp(RegisterBody registerBody)
-    {
-        if (StringUtils.isEmpty(registerBody.getRegisterRole()))
-        {
-            return "请选择注册身份：家长(parent) 或 教师(teacher)";
-        }
-        String key = registerBody.getRegisterRole().trim().toLowerCase();
-        if (!"parent".equals(key) && !"teacher".equals(key))
-        {
-            return "注册身份仅支持家长(parent) 或 教师(teacher)";
-        }
-        return register(registerBody);
-    }
-
-    /**
      * 校验验证码
      * 
      * @param username 用户名

@@ -11,9 +11,10 @@
 --
 -- 内容概览：
 --   1) 安全补列：teacher.area_id/grade_id、course.address、product 缺列时补 stock/image
---   2) review.status：由 enum(pending/approved/rejected) 转为与代码一致的 0/1/2
---   3) 角色：parent / teacher + 菜单（与 register_roles_parent_teacher.sql 等价逻辑）
---   4) 系统参数：开启自助注册
+--   2) users：password 列、users_type 含 parent（业务端注册/登录）
+--   3) review.status：由 enum(pending/approved/rejected) 转为与代码一致的 0/1/2
+--   4) 角色：parent / teacher + 菜单（管理端 sys_role，与小程序身份展示可并存）
+--   5) 系统参数：开启自助注册
 --
 -- 不包含：修复 order→user、user_membership→membership_card 等错误外键（需单独评估后手工改）
 -- =============================================================================
@@ -66,6 +67,41 @@ CALL sp_add_column_if_missing('product', 'image',
 DROP PROCEDURE IF EXISTS sp_add_column_if_missing;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ---------------------------------------------------------------------------
+-- users：业务端登录密码 + 家长类型（与 /register/app、/app/auth/*、/codeLogin 一致）
+-- password 列幂等添加；users_type 若已含 parent 可忽略 ALTER 报错
+-- ---------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS sp_add_column_if_missing;
+
+DELIMITER $$
+CREATE PROCEDURE sp_add_column_if_missing(
+    IN p_table VARCHAR(64),
+    IN p_column VARCHAR(64),
+    IN p_definition TEXT
+)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = p_table
+          AND COLUMN_NAME = p_column
+    ) THEN
+        SET @ddl = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `', p_column, '` ', p_definition);
+        PREPARE stmt FROM @ddl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+DELIMITER ;
+
+CALL sp_add_column_if_missing('users', 'password',
+    "VARCHAR(100) NULL COMMENT 'BCrypt，业务端密码登录' AFTER phone");
+
+DROP PROCEDURE IF EXISTS sp_add_column_if_missing;
+
+-- 由 teacher/student 扩展出 parent。若当前 users_type 为 VARCHAR 等非 enum，请手工改表后再注册 parent。
+ALTER TABLE `users` MODIFY COLUMN `users_type` ENUM('teacher','student','parent') NOT NULL DEFAULT 'student';
 
 -- ---------------------------------------------------------------------------
 -- review.status：代码与小程序使用 0=待审 / 1=通过 / 2=驳回（字符串或数字比较）
