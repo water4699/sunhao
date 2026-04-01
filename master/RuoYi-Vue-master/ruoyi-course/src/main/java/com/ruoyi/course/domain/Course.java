@@ -38,10 +38,14 @@ public class Course extends BaseEntity
     @Excel(name = "课程状态")
     private Long status;
 
-    /** 开始日期 */
+    /** 开始日期（小程序预约可与 address 中「时段」配合使用） */
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "开始日期", width = 30, dateFormat = "yyyy-MM-dd")
     private Date startDate;
+
+    /** 上课地址 */
+    @Excel(name = "上课地址")
+    private String address;
 
     /** 预期课时 */
     @Excel(name = "预期课时")
@@ -129,6 +133,16 @@ public class Course extends BaseEntity
         return startDate;
     }
 
+    public void setAddress(String address)
+    {
+        this.address = address;
+    }
+
+    public String getAddress()
+    {
+        return address;
+    }
+
     public void setExpectedHours(String expectedHours) 
     {
         this.expectedHours = expectedHours;
@@ -179,6 +193,7 @@ public class Course extends BaseEntity
             .append("gradeId", getGradeId())
             .append("status", getStatus())
             .append("startDate", getStartDate())
+            .append("address", getAddress())
             .append("expectedHours", getExpectedHours())
             .append("completedHours", getCompletedHours())
             .append("hourlyRate", getHourlyRate())

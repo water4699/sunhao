@@ -1,5 +1,6 @@
 package com.ruoyi.course.controller;
 
+import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
@@ -74,6 +77,29 @@ public class CourseController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody Course course)
     {
+        if (StringUtils.isEmpty(course.getStudentId()))
+        {
+            try
+            {
+                course.setStudentId(String.valueOf(SecurityUtils.getUserId()));
+            }
+            catch (Exception e)
+            {
+                return error("请先登录后再预约");
+            }
+        }
+        if (course.getStatus() == null)
+        {
+            course.setStatus(0L);
+        }
+        if (StringUtils.isEmpty(course.getExpectedHours()))
+        {
+            course.setExpectedHours("1");
+        }
+        if (course.getCreatedAt() == null)
+        {
+            course.setCreatedAt(new Date());
+        }
         return toAjax(courseService.insertCourse(course));
     }
 

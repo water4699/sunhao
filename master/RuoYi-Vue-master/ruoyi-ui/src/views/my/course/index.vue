@@ -90,6 +90,7 @@
           <span>{{ parseTime(scope.row.startDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="上课地址" align="center" prop="address" min-width="160" show-overflow-tooltip />
       <el-table-column label="预期课时" align="center" prop="expectedHours" />
       <el-table-column label="已完成课时" align="center" prop="completedHours" />
       <el-table-column label="课时费用" align="center" prop="hourlyRate" />
@@ -136,6 +137,9 @@
             value-format="yyyy-MM-dd"
             placeholder="请选择开始日期">
           </el-date-picker>
+        </el-form-item>
+        <el-form-item label="上课地址" prop="address">
+          <el-input v-model="form.address" type="textarea" :rows="2" placeholder="含时段与详细地址" />
         </el-form-item>
         <el-form-item label="课时费用" prop="hourlyRate">
           <el-input v-model="form.hourlyRate" placeholder="请输入课时费用" />
@@ -259,6 +263,7 @@ export default {
         gradeId: null,
         status: null,
         startDate: null,
+        address: null,
         expectedHours: null,
         completedHours: null,
         hourlyRate: null,

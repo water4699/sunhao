@@ -71,105 +71,121 @@
 </template>
 
 <script>
-	
 	import {
 		getOneTeacher
 	} from '@/api/teacher/getTeacherMag'
 	import {
+		addCourse
+	} from '@/api/course/course'
+	import {
 		baseUrl
-	} from '../../../../config';
-	
-export default {
-  data() {
-    return {
-      teacherAvatar: 'https://ai-public.mastergo.com/ai/img_res/ed1d9ac872926869a023748b95562aab.jpg',
-      teacherName: '王老师',
-      teacherSubjects: ['数学', '物理'],
-      rating: 4.5,
-      selectedDate: '',
-      selectedTime: '',
-      // selectedSubject: '',
-      address: '',
-      subjectOptions: ['数学', '物理', '化学', '英语'],
-      startDate: '2023-01-01',
-      endDate: '2024-12-31'
-    }
-  },
-  computed: {
-    isFormValid() {
-      return this.selectedDate && this.selectedTime && this.selectedSubject !== '' && this.address;
-    },
-    fullStars() {
-      return Math.floor(this.rating);
-    },
-    hasHalfStar() {
-      return this.rating % 1 >= 0.5;
-    }
-  },
-  
-  onLoad(e){
-	  console.log(e.id);
-  	this.id = e.id;
-  },
-  mounted() {
-  	this.init();
-  },
-  methods: {
-	  init() {
-	  	getOneTeacher(this.id).then(res => {
-	  		var msg = res.data;
-			console.log(msg);
-	  		this.teacherAvatar = baseUrl + msg.image;
-	  		this.teacherName = msg.realName;
-	  		this.gender = msg.gender;
-	  		this.education =msg.education;
-	  		this.school =msg.university;
-	  		this.teacherSubjects = msg.subjectName;
-	  		this.hourlyFee = msg.hourlyRate;
-	  		this.score = msg.rating;
-	  	})
-	  	
-	  },
-    handleDateChange(e) {
-      this.selectedDate = e.detail.value;
-    },
-    handleTimeChange(e) {
-      this.selectedTime = e.detail.value;
-    },
-    handleSubjectChange(e) {
-      this.selectedSubject = e.detail.value;
-    },
-    handleSubmit() {
-      if (!this.isFormValid) {
-        uni.showToast({
-          title: '请完善所有预约信息',
-          icon: 'none',
-        });
-        return;
-      }
-      
-      uni.showToast({
-        title: '预约成功',
-        icon: 'success',
-		duration: 1500,
-		success: () => {
-		    // 在 toast 消失后跳转
-		    setTimeout(() => {
-		        uni.switchTab({
-		            url: `/pages/findteacher/findteacher/findteacher`,
-		        })
-		    }, 1500)
+	} from '../../../../config'
+
+	export default {
+		data() {
+			return {
+				id: '',
+				teacherAvatar: '',
+				teacherName: '',
+				teacherSubjects: '',
+				teacherSubjectId: '',
+				rating: 0,
+				hourlyFee: 0,
+				selectedDate: '',
+				selectedTime: '',
+				address: '',
+				startDate: '',
+				endDate: ''
+			}
+		},
+		computed: {
+			isFormValid() {
+				return !!(this.selectedDate && this.selectedTime && (this.address || '').trim())
+			},
+			fullStars() {
+				return Math.floor(Number(this.rating) || 0)
+			},
+			hasHalfStar() {
+				return (Number(this.rating) || 0) % 1 >= 0.5
+			}
+		},
+		onLoad(options) {
+			this.id = (options && (options.id || options.teacherId)) || ''
+			const d = new Date()
+			this.startDate = this.fmtDate(d)
+			const end = new Date(d.getTime() + 90 * 86400000)
+			this.endDate = this.fmtDate(end)
+		},
+		mounted() {
+			this.loadTeacher()
+		},
+		methods: {
+			fmtDate(d) {
+				const y = d.getFullYear()
+				const m = String(d.getMonth() + 1).padStart(2, '0')
+				const day = String(d.getDate()).padStart(2, '0')
+				return `${y}-${m}-${day}`
+			},
+			loadTeacher() {
+				if (!this.id) return
+				getOneTeacher(this.id).then(res => {
+					const t = res.data
+					if (!t) return
+					const img = t.image || ''
+					this.teacherAvatar = img && String(img).startsWith('http') ? img : (baseUrl + img)
+					this.teacherName = t.realName || ''
+					this.teacherSubjects = t.subjectName || ''
+					const sid = t.subjectId
+					this.teacherSubjectId = sid != null && sid !== '' ? String(sid) : ''
+					this.rating = Number(t.rating) || 0
+					this.hourlyFee = t.hourlyRate != null ? t.hourlyRate : 0
+				}).catch(() => {})
+			},
+			handleDateChange(e) {
+				this.selectedDate = e.detail.value
+			},
+			handleTimeChange(e) {
+				this.selectedTime = e.detail.value
+			},
+			handleSubmit() {
+				if (!this.isFormValid) {
+					uni.showToast({
+						title: '请选择日期、时段并填写地址',
+						icon: 'none'
+					})
+					return
+				}
+				const payload = {
+					teacherId: String(this.id),
+					startDate: this.selectedDate,
+					address: `时段：${this.selectedTime}；${this.address.trim()}`,
+					hourlyRate: this.hourlyFee,
+					expectedHours: '1',
+					status: 0
+				}
+				if (this.teacherSubjectId) {
+					payload.subjectId = this.teacherSubjectId
+				}
+				uni.showLoading({
+					title: '提交中...'
+				})
+				addCourse(payload).then(() => {
+					uni.hideLoading()
+					uni.showToast({
+						title: '预约已提交',
+						icon: 'success'
+					})
+					setTimeout(() => {
+						uni.switchTab({
+							url: '/pages/mine/order/order'
+						})
+					}, 1200)
+				}).catch(() => {
+					uni.hideLoading()
+				})
+			}
 		}
-      });
-      
-      // 重置表单
-      this.selectedDate = '';
-      this.selectedTime = '';
-      this.selectedSubject = '';
-      this.address = '';
-    }
-  }
-}
+	}
 </script>
 
 <style>
