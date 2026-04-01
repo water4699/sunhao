@@ -27,6 +27,10 @@
 			</view>
 		</view>
 		<view class="core-functions-extra">
+			<view class="function-card-wide" @click="goAiAssistant">
+				<text class="function-title">智能选课助手</text>
+				<text class="function-desc">AI 建议 + 按条件推荐认证教师</text>
+			</view>
 			<view class="function-card-wide" @click="goReviewList">
 				<text class="function-title">家长评价</text>
 				<text class="function-desc">已通过审核的真实评价</text>
@@ -235,6 +239,11 @@
 			teacherJoin() {
 				uni.navigateTo({
 					url: '/pages/teacherJoin/teacherJoin'
+				});
+			},
+			goAiAssistant() {
+				uni.navigateTo({
+					url: '/pages/aiAssistant/aiAssistant'
 				});
 			},
 			goReviewList() {

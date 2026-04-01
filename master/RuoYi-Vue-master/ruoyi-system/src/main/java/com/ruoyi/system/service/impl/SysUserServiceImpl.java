@@ -282,13 +282,20 @@ public class SysUserServiceImpl implements ISysUserService
     /**
      * 注册用户信息
      * 
-     * @param user 用户信息
+     * @param user 用户信息（可预先设置 roleIds，插入用户后会写入 sys_user_role）
      * @return 结果
      */
     @Override
+    @Transactional
     public boolean registerUser(SysUser user)
     {
-        return userMapper.insertUser(user) > 0;
+        int rows = userMapper.insertUser(user);
+        if (rows <= 0)
+        {
+            return false;
+        }
+        insertUserRole(user);
+        return true;
     }
 
     /**

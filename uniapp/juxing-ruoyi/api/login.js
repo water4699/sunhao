@@ -12,7 +12,7 @@ export function login(loginForm) {
   })
 }
 
-// 注册方法
+// 注册方法（PC/通用：registerRole 可空，空则绑定 common）
 export function register(data) {
   return request({
     url: '/register',
@@ -20,7 +20,19 @@ export function register(data) {
       isToken: false
     },
     method: 'post',
-    data: data
+    data
+  })
+}
+
+/** 小程序注册：须传 registerRole 为 parent 或 teacher */
+export function registerApp(data) {
+  return request({
+    url: '/register/app',
+    headers: {
+      isToken: false
+    },
+    method: 'post',
+    data
   })
 }
 

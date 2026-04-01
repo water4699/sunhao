@@ -18,6 +18,12 @@
         <view class="iconfont icon-password icon"></view>
         <input v-model="registerForm.confirmPassword" type="password" class="input" placeholder="请输入重复密码" maxlength="20" />
       </view>
+      <view class="input-item flex align-center">
+        <view class="iconfont icon-user icon"></view>
+        <picker mode="selector" :range="roleLabels" :value="registerRoleIndex" @change="onRoleChange" class="role-picker">
+          <view class="input role-picker-text">{{ roleLabels[registerRoleIndex] }}</view>
+        </picker>
+      </view>
       <view class="input-item flex align-center" style="width: 60%;margin: 0px;" v-if="captchaEnabled">
         <view class="iconfont icon-code icon"></view>
         <input v-model="registerForm.code" type="number" class="input" placeholder="请输入验证码" maxlength="4" />
@@ -36,7 +42,7 @@
 </template>
 
 <script>
-  import { getCodeImg, register } from '@/api/login'
+  import { getCodeImg, registerApp } from '@/api/login'
 
   export default {
     data() {
@@ -44,6 +50,9 @@
         codeUrl: "",
         captchaEnabled: true,
         globalConfig: getApp().globalData.config,
+        registerRoleIndex: 0,
+        roleLabels: ['我是家长（预约课程）', '我是教师（入驻接单）'],
+        roleValues: ['parent', 'teacher'],
         registerForm: {
           username: "",
           password: "",
@@ -57,6 +66,9 @@
       this.getCode()
     },
     methods: {
+      onRoleChange(e) {
+        this.registerRoleIndex = Number(e.detail.value)
+      },
       // 用户登录
       handleUserLogin() {
         this.$tab.navigateTo(`/pages/login`)
@@ -88,9 +100,13 @@
           this.register()
         }
       },
-      // 用户注册
+      // 用户注册（绑定家长/教师角色，与 sys_role 一致）
       async register() {
-        register(this.registerForm).then(res => {
+        const payload = {
+          ...this.registerForm,
+          registerRole: this.roleValues[this.registerRoleIndex]
+        }
+        registerApp(payload).then(res => {
           this.$modal.closeLoading()
           uni.showModal({
           	title: "系统提示",

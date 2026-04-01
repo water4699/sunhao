@@ -243,6 +243,7 @@
         <module>ruoyi-student</module>
         <module>ruoyi-subject</module>
         <module>ruoyi-teacher</module>
+        <module>ruoyi-ai</module>
         <module>ruoyi-card</module>
         <module>ruoyi-users</module>
     </modules>

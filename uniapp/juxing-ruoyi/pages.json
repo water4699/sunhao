@@ -19,6 +19,12 @@
         "navigationBarTitleText": "聚星教育"
       }
     },
+    {
+      "path": "pages/aiAssistant/aiAssistant",
+      "style": {
+        "navigationBarTitleText": "智能选课助手"
+      }
+    },
     // {
     //   "path": "pages/work/index",
     //   "style": {

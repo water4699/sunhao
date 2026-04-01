@@ -35,4 +35,18 @@ public class SysRegisterController extends BaseController
         String msg = registerService.register(user);
         return StringUtils.isEmpty(msg) ? success() : error(msg);
     }
+
+    /**
+     * 小程序注册：必须选择家长(parent) 或 教师(teacher)，与 sys_role 绑定一致
+     */
+    @PostMapping("/register/app")
+    public AjaxResult registerApp(@RequestBody RegisterBody user)
+    {
+        if (!("true".equals(configService.selectConfigByKey("sys.account.registerUser"))))
+        {
+            return error("当前系统没有开启注册功能！");
+        }
+        String msg = registerService.registerApp(user);
+        return StringUtils.isEmpty(msg) ? success() : error(msg);
+    }
 }
