@@ -60,9 +60,9 @@ public interface ISysRoleService
     public SysRole selectRoleById(Long roleId);
 
     /**
-     * 按 role_key 精确查询角色（注册绑定 parent / teacher 等）
+     * 按 role_key 精确查询角色（注册绑定 student / teacher 等）
      *
-     * @param roleKey 角色权限字符串，如 parent、teacher、common
+     * @param roleKey 角色权限字符串，如 student、teacher、common
      * @return 角色，不存在则 null
      */
     public SysRole selectRoleByRoleKey(String roleKey);

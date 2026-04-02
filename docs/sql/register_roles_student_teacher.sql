@@ -1,23 +1,23 @@
--- 【历史】家长 / 教师：旧版小程序曾用 registerRole=parent|teacher。
--- 当前产品角色为学生+教师，请优先执行 register_roles_student_teacher.sql；本脚本仅用于补家长角色或旧库兼容。
--- 执行前请备份；可重复执行（依赖 NOT EXISTS）
+-- 学生 / 教师角色：与小程序、/register/app、/app/auth/register 的 registerRole=student|teacher 对应
+-- 管理端 /register 若传 registerRole，亦依赖 sys_role.role_key
+-- 可重复执行（NOT EXISTS）；执行前请备份
 
 INSERT INTO sys_role (role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-SELECT '家长', 'parent', 3, '1', 1, 1, '0', '0', 'system', NOW(), '小程序家长注册'
+SELECT '学生', 'student', 5, '1', 1, 1, '0', '0', 'system', NOW(), '业务端学生注册'
 FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM sys_role WHERE role_key = 'parent' AND del_flag = '0');
+WHERE NOT EXISTS (SELECT 1 FROM sys_role WHERE role_key = 'student' AND del_flag = '0');
 
 INSERT INTO sys_role (role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_by, create_time, remark)
-SELECT '教师', 'teacher', 4, '1', 1, 1, '0', '0', 'system', NOW(), '小程序教师注册'
+SELECT '教师', 'teacher', 4, '1', 1, 1, '0', '0', 'system', NOW(), '业务端教师注册'
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_role WHERE role_key = 'teacher' AND del_flag = '0');
 
--- 菜单权限：与「普通角色 role_id=2」对齐，便于调用业务接口；生产环境可按需收紧
+-- 菜单与普通角色 role_id=2 对齐（与历史 parent 脚本策略一致）
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT r.role_id, m.menu_id
 FROM sys_role r
 INNER JOIN sys_role_menu m ON m.role_id = 2
-WHERE r.role_key = 'parent' AND r.del_flag = '0'
+WHERE r.role_key = 'student' AND r.del_flag = '0'
   AND NOT EXISTS (
     SELECT 1 FROM sys_role_menu x WHERE x.role_id = r.role_id AND x.menu_id = m.menu_id
   );

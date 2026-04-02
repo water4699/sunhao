@@ -12,7 +12,7 @@ public class RegisterBody extends LoginBody
 
     /**
      * 注册时绑定角色：空或未传则分配 common（普通角色，role_id=2）；
-     * parent=家长、teacher=教师（需库中存在 role_key，见 docs/sql/register_roles_parent_teacher.sql）
+     * student=学生、teacher=教师（需库中存在 role_key，见 docs/sql/register_roles_student_teacher.sql）
      */
     private String registerRole;
 

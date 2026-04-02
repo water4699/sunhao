@@ -55,8 +55,8 @@
         captchaEnabled: true,
         globalConfig: getApp().globalData.config,
         registerRoleIndex: 0,
-        roleLabels: ['我是家长（预约课程）', '我是教师（入驻接单）'],
-        roleValues: ['parent', 'teacher'],
+        roleLabels: ['我是学生（选课约课）', '我是教师（入驻接单）'],
+        roleValues: ['student', 'teacher'],
         registerForm: {
           username: "",
           password: "",

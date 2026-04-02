@@ -24,7 +24,7 @@ export function register(data) {
   })
 }
 
-/** 小程序注册：须传 registerRole 为 parent 或 teacher */
+/** 小程序注册：须传 registerRole 为 student 或 teacher */
 export function registerApp(data) {
   return request({
     url: '/register/app',

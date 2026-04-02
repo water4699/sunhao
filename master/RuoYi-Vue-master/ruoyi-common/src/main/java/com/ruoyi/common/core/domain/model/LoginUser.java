@@ -72,11 +72,11 @@ public class LoginUser implements UserDetails
     private SysUser user;
 
     /**
-     * 是否为业务端用户（家长/教师等，数据在 users 表，非 sys_user）
+     * 是否为业务端用户（学生/教师等，数据在 users 表，非 sys_user）
      */
     private boolean businessUser;
 
-    /** 业务用户类型：parent / teacher（与 users.users_type 一致） */
+    /** 业务用户类型：student / teacher / parent 等（与 users.users_type 一致） */
     private String businessUsersType;
 
     public LoginUser()

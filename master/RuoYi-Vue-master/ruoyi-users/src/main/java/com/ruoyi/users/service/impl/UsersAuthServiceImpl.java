@@ -31,12 +31,12 @@ public class UsersAuthServiceImpl implements IUsersAuthService
         String phone = body.getPhone();
         if (StringUtils.isEmpty(body.getRegisterRole()))
         {
-            return "请选择注册身份：家长(parent) 或 教师(teacher)";
+            return "请选择注册身份：学生(student) 或 教师(teacher)";
         }
         String roleKey = body.getRegisterRole().trim().toLowerCase();
-        if (!"parent".equals(roleKey) && !"teacher".equals(roleKey))
+        if (!"student".equals(roleKey) && !"teacher".equals(roleKey))
         {
-            return "注册身份仅支持家长(parent) 或 教师(teacher)";
+            return "注册身份仅支持学生(student) 或 教师(teacher)";
         }
         if (StringUtils.isEmpty(username))
         {
