@@ -24,6 +24,14 @@ public class Users extends BaseEntity
     @Excel(name = "手机号")
     private String phone;
 
+    /** 邮箱 */
+    @Excel(name = "邮箱")
+    private String email;
+
+    /** 性别（0男/1女/2未知） */
+    @Excel(name = "性别", readConverterExp = "0=男,1=女,2=未知")
+    private String sex;
+
     /** 登录密码（BCrypt，不落库展示） */
     @JsonIgnore
     private String password;
@@ -68,6 +76,26 @@ public class Users extends BaseEntity
     public String getPhone() 
     {
         return phone;
+    }
+
+    public String getEmail()
+    {
+        return email;
+    }
+
+    public void setEmail(String email)
+    {
+        this.email = email;
+    }
+
+    public String getSex()
+    {
+        return sex;
+    }
+
+    public void setSex(String sex)
+    {
+        this.sex = sex;
     }
 
     public String getPassword()
@@ -116,6 +144,8 @@ public class Users extends BaseEntity
             .append("usersId", getUsersId())
             .append("usersname", getUsersname())
             .append("phone", getPhone())
+            .append("email", getEmail())
+            .append("sex", getSex())
             .append("usersType", getUsersType())
             .append("image", getImage())
             .append("status", getStatus())

@@ -27,6 +27,8 @@ public final class BusinessLoginUserBuilder
         stub.setUserName(u.getUsersname());
         stub.setNickName(u.getUsersname());
         stub.setPhonenumber(u.getPhone());
+        stub.setEmail(u.getEmail() != null ? u.getEmail() : "");
+        stub.setSex(u.getSex() != null ? u.getSex() : "2");
         stub.setAvatar(u.getImage() != null ? u.getImage() : "");
         stub.setPassword("");
         stub.setStatus("0");

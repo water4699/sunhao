@@ -66,15 +66,8 @@ public class SysProfileController extends BaseController
             su.setUserName(u.getUsersname());
             su.setNickName(u.getUsersname());
             su.setPhonenumber(u.getPhone());
-            // 业务库 users 表目前不落 email/sex；这里优先从登录态的 stub 里取，保证“刚修改后再次打开”可见。
-            String stubEmail = (loginUser.getUser() != null && StringUtils.isNotEmpty(loginUser.getUser().getEmail()))
-                    ? loginUser.getUser().getEmail()
-                    : "";
-            String stubSex = (loginUser.getUser() != null && StringUtils.isNotEmpty(loginUser.getUser().getSex()))
-                    ? loginUser.getUser().getSex()
-                    : "0";
-            su.setEmail(stubEmail);
-            su.setSex(stubSex);
+            su.setEmail(StringUtils.isNotEmpty(u.getEmail()) ? u.getEmail() : "");
+            su.setSex(StringUtils.isNotEmpty(u.getSex()) ? u.getSex() : "2");
             su.setAvatar(StringUtils.isNotEmpty(u.getImage()) ? u.getImage() : "");
             su.setCreateTime(u.getCreateTime());
             AjaxResult ajax = AjaxResult.success(su);
@@ -145,20 +138,23 @@ public class SysProfileController extends BaseController
                 }
                 db.setPhone(user.getPhonenumber());
             }
+            // users 表目前不强制要求 email/sex，但前端存在这两个字段，需要持久化回显
+            if (StringUtils.isNotEmpty(user.getEmail()))
+            {
+                db.setEmail(user.getEmail());
+            }
+            if (StringUtils.isNotEmpty(user.getSex()))
+            {
+                db.setSex(user.getSex());
+            }
             if (usersService.updateUsers(db) > 0)
             {
                 SysUser stub = loginUser.getUser();
                 stub.setNickName(db.getUsersname());
                 stub.setUserName(db.getUsersname());
                 stub.setPhonenumber(db.getPhone());
-                if (StringUtils.isNotEmpty(user.getEmail()))
-                {
-                    stub.setEmail(user.getEmail());
-                }
-                if (StringUtils.isNotEmpty(user.getSex()))
-                {
-                    stub.setSex(user.getSex());
-                }
+                stub.setEmail(StringUtils.isNotEmpty(db.getEmail()) ? db.getEmail() : "");
+                stub.setSex(StringUtils.isNotEmpty(db.getSex()) ? db.getSex() : "2");
                 tokenService.setLoginUser(loginUser);
                 return success();
             }

@@ -8,6 +8,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="usersId"    column="users_id"    />
         <result property="usersname"    column="usersname"    />
         <result property="phone"    column="phone"    />
+        <result property="email"    column="email"    />
+        <result property="sex"    column="sex"    />
         <result property="usersType"    column="users_type"    />
         <result property="image"    column="image"    />
         <result property="status"    column="status"    />
@@ -19,11 +21,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectUsersVo">
-        select users_id, usersname, phone, users_type, image, status, create_time from users
+        select users_id, usersname, phone, email, sex, users_type, image, status, create_time from users
     </sql>
 
     <sql id="selectUsersVoAuth">
-        select users_id, usersname, phone, password, users_type, image, status, create_time from users
+        select users_id, usersname, phone, email, sex, password, users_type, image, status, create_time from users
     </sql>
 
     <select id="selectUsersList" parameterType="Users" resultMap="UsersResult">
@@ -70,6 +72,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="usersname != null and usersname != ''">usersname,</if>
             <if test="phone != null and phone != ''">phone,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="sex != null and sex != ''">sex,</if>
             <if test="password != null and password != ''">password,</if>
             <if test="usersType != null and usersType != ''">users_type,</if>
             <if test="image != null">image,</if>
@@ -79,6 +83,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="usersname != null and usersname != ''">#{usersname},</if>
             <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="sex != null and sex != ''">#{sex},</if>
             <if test="password != null and password != ''">#{password},</if>
             <if test="usersType != null and usersType != ''">#{usersType},</if>
             <if test="image != null">#{image},</if>
@@ -92,6 +98,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="usersname != null and usersname != ''">usersname = #{usersname},</if>
             <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="sex != null">sex = #{sex},</if>
             <if test="password != null and password != ''">password = #{password},</if>
             <if test="usersType != null and usersType != ''">users_type = #{usersType},</if>
             <if test="image != null and image != ''">image = #{image},</if>
