@@ -40,7 +40,7 @@
         :refresher-enabled="true"
         :refresher-triggered="isRefreshing"
       >
-        <view class="order-item" v-for="(order, index) in filteredOrderList" :key="'c' + order.id">
+        <view class="order-item" v-for="(order, index) in filteredOrderList" :key="order.id">
           <view class="order-header">
             <view class="order-number">预约号：{{ order.orderNumber }}</view>
             <view :class="['order-status', getStatusClass(order.status)]">
@@ -79,7 +79,7 @@
         :refresher-enabled="true"
         :refresher-triggered="isRefreshingProduct"
       >
-        <view class="order-item" v-for="po in productOrderList" :key="'p' + po.id">
+        <view class="order-item" v-for="po in productOrderList" :key="po.id">
           <view class="order-header">
             <view class="order-number">订单号：{{ po.orderNumber }}</view>
             <view class="order-status paid">已支付</view>
