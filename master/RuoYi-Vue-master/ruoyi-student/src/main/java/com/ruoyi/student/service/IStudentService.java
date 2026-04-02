@@ -17,6 +17,11 @@ public interface IStudentService
     public Student selectStudentByStudentId(String studentId);
 
     /**
+     * 按 users.users_id 查询学生档案
+     */
+    public Student selectStudentByUserId(String userId);
+
+    /**
      * 查询学生信息列表
      * 
      * @param student 学生信息

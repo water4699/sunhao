@@ -28,6 +28,12 @@ public class StudentServiceImpl implements IStudentService
         return studentMapper.selectStudentByStudentId(studentId);
     }
 
+    @Override
+    public Student selectStudentByUserId(String userId)
+    {
+        return studentMapper.selectStudentByUserId(userId);
+    }
+
     /**
      * 查询学生信息列表
      * 

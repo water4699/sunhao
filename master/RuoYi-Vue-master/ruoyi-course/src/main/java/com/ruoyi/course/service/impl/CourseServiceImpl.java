@@ -4,12 +4,17 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.course.mapper.CourseMapper;
 import com.ruoyi.course.domain.Course;
 import com.ruoyi.course.service.ICourseService;
+import com.ruoyi.student.domain.Student;
+import com.ruoyi.student.service.IStudentService;
 import com.ruoyi.teacher.domain.Teacher;
 import com.ruoyi.teacher.service.ITeacherService;
+import com.ruoyi.users.domain.Users;
+import com.ruoyi.users.service.IUsersService;
 
 /**
  * 课程管理Service业务层处理
@@ -22,6 +27,12 @@ public class CourseServiceImpl implements ICourseService
 
     @Autowired
     private ITeacherService teacherService;
+
+    @Autowired
+    private IStudentService studentService;
+
+    @Autowired
+    private IUsersService usersService;
 
     /**
      * 查询课程管理
@@ -56,9 +67,52 @@ public class CourseServiceImpl implements ICourseService
     @Override
     public int insertCourse(Course course)
     {
+        resolveStudentIdForCourse(course);
         fillGradeIdIfMissing(course);
         validateNoDuplicateBooking(course);
         return courseMapper.insertCourse(course);
+    }
+
+    /**
+     * course.student_id 外键指向 student.student_id；小程序常传 users.users_id。
+     * 先按 student_id 命中则不变；否则按 user_id 找档案；再无则对学员/家长用户自动补一条 student。
+     */
+    private void resolveStudentIdForCourse(Course course)
+    {
+        if (course == null || StringUtils.isEmpty(course.getStudentId()))
+        {
+            throw new ServiceException("学员信息不能为空");
+        }
+        String key = course.getStudentId().trim();
+        if (studentService.selectStudentByStudentId(key) != null)
+        {
+            course.setStudentId(key);
+            return;
+        }
+        Student byUser = studentService.selectStudentByUserId(key);
+        if (byUser != null && StringUtils.isNotEmpty(byUser.getStudentId()))
+        {
+            course.setStudentId(byUser.getStudentId());
+            return;
+        }
+        Users u = usersService.selectUsersByUsersId(key);
+        if (u == null)
+        {
+            throw new ServiceException("学员账号不存在，无法预约。请使用已注册的学生或家长账号。");
+        }
+        if ("teacher".equalsIgnoreCase(StringUtils.trim(u.getUsersType())))
+        {
+            throw new ServiceException("教师账号不能作为学员预约课程，请使用学生或家长账号。");
+        }
+        Student row = new Student();
+        row.setUserId(key);
+        row.setStatus(0L);
+        row.setCreatedAt(DateUtils.getNowDate());
+        if (studentService.insertStudent(row) <= 0 || StringUtils.isEmpty(row.getStudentId()))
+        {
+            throw new ServiceException("创建学员档案失败，请稍后重试或联系管理员。");
+        }
+        course.setStudentId(row.getStudentId());
     }
 
     /**

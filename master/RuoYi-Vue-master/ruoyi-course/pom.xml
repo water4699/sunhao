@@ -24,5 +24,15 @@
         <artifactId>ruoyi-teacher</artifactId>
         <version>${project.version}</version>
     </dependency>
+    <dependency>
+        <groupId>com.ruoyi</groupId>
+        <artifactId>ruoyi-student</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.ruoyi</groupId>
+        <artifactId>ruoyi-users</artifactId>
+        <version>${project.version}</version>
+    </dependency>
 </dependencies>
 </project>

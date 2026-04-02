@@ -1,11 +1,14 @@
 package com.ruoyi.users.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.core.domain.model.RegisterBody;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.student.domain.Student;
+import com.ruoyi.student.service.IStudentService;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.users.domain.Users;
@@ -18,12 +21,16 @@ public class UsersAuthServiceImpl implements IUsersAuthService
 {
     private final UsersMapper usersMapper;
 
-    public UsersAuthServiceImpl(UsersMapper usersMapper)
+    private final IStudentService studentService;
+
+    public UsersAuthServiceImpl(UsersMapper usersMapper, IStudentService studentService)
     {
         this.usersMapper = usersMapper;
+        this.studentService = studentService;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String registerBusiness(RegisterBody body)
     {
         String username = body.getUsername();
@@ -83,6 +90,17 @@ public class UsersAuthServiceImpl implements IUsersAuthService
         if (usersMapper.insertUsers(row) <= 0)
         {
             return "注册失败,请联系系统管理人员";
+        }
+        if ("student".equals(roleKey) || "parent".equals(roleKey))
+        {
+            Student s = new Student();
+            s.setUserId(row.getUsersId());
+            s.setStatus(0L);
+            s.setCreatedAt(DateUtils.getNowDate());
+            if (studentService.insertStudent(s) <= 0)
+            {
+                throw new ServiceException("创建学员档案失败，请重试或联系管理员");
+            }
         }
         return "";
     }

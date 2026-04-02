@@ -17,6 +17,11 @@ public interface StudentMapper
     public Student selectStudentByStudentId(String studentId);
 
     /**
+     * 按业务用户 ID（users.users_id）查一条学生档案（小程序约课常把 users_id 当作 studentId 传）
+     */
+    public Student selectStudentByUserId(String userId);
+
+    /**
      * 查询学生信息列表
      * 
      * @param student 学生信息
