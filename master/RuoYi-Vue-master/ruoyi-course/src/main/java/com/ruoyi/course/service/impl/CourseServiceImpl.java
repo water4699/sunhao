@@ -8,6 +8,8 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.course.mapper.CourseMapper;
 import com.ruoyi.course.domain.Course;
 import com.ruoyi.course.service.ICourseService;
+import com.ruoyi.teacher.domain.Teacher;
+import com.ruoyi.teacher.service.ITeacherService;
 
 /**
  * 课程管理Service业务层处理
@@ -17,6 +19,9 @@ public class CourseServiceImpl implements ICourseService
 {
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private ITeacherService teacherService;
 
     /**
      * 查询课程管理
@@ -51,8 +56,28 @@ public class CourseServiceImpl implements ICourseService
     @Override
     public int insertCourse(Course course)
     {
+        fillGradeIdIfMissing(course);
         validateNoDuplicateBooking(course);
         return courseMapper.insertCourse(course);
+    }
+
+    /** 库表 grade_id 常 NOT NULL；小程序预约可能不传，则从教师档案带出，否则写空串 */
+    private void fillGradeIdIfMissing(Course course)
+    {
+        if (course == null || StringUtils.isNotEmpty(course.getGradeId()))
+        {
+            return;
+        }
+        if (StringUtils.isNotEmpty(course.getTeacherId()))
+        {
+            Teacher t = teacherService.selectTeacherByTeacherId(course.getTeacherId());
+            if (t != null && StringUtils.isNotEmpty(t.getGradeId()))
+            {
+                course.setGradeId(t.getGradeId());
+                return;
+            }
+        }
+        course.setGradeId("");
     }
 
     private void validateNoDuplicateBooking(Course course)
