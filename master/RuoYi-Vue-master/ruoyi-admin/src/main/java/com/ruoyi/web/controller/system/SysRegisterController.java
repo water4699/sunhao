@@ -41,7 +41,7 @@ public class SysRegisterController extends BaseController
     }
 
     /**
-     * 小程序注册：必须选择学生(student) 或 教师(teacher)，写入 users.users_type
+     * 小程序注册：student / parent / teacher 写入 users.users_type（学生与家长同属约课侧）
      */
     @PostMapping("/register/app")
     public AjaxResult registerApp(@RequestBody RegisterBody user)

@@ -76,7 +76,7 @@ public class LoginUser implements UserDetails
      */
     private boolean businessUser;
 
-    /** 业务用户类型：student / teacher / parent 等（与 users.users_type 一致） */
+    /** 业务用户类型：student / parent / teacher（与 users.users_type 一致） */
     private String businessUsersType;
 
     public LoginUser()
