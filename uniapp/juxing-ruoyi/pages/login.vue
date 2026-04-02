@@ -236,7 +236,7 @@
 							setToken(res.token)
 							this.loginSuccess()
 						} else {
-							console.error(e)
+							uni.showToast({ title: res.msg || '登录失败', icon: 'none' })
 						}
 						uni.hideLoading()
 					})
@@ -253,7 +253,7 @@
 							setToken(res.token)
 							this.loginSuccess()
 						} else {
-							console.error(e)
+							uni.showToast({ title: res.msg || '登录失败', icon: 'none' })
 						}
 						uni.hideLoading()
 					})

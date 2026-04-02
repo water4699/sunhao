@@ -9,6 +9,8 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.course.domain.Course;
 import com.ruoyi.course.mapper.CourseMapper;
+import com.ruoyi.student.domain.Student;
+import com.ruoyi.student.service.IStudentService;
 import com.ruoyi.review.mapper.ReviewMapper;
 import com.ruoyi.review.domain.Review;
 import com.ruoyi.review.service.IReviewService;
@@ -23,6 +25,9 @@ public class ReviewServiceImpl implements IReviewService {
 
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private IStudentService studentService;
 
     /**
      * 查询评价
@@ -102,13 +107,23 @@ public class ReviewServiceImpl implements IReviewService {
             throw new ServiceException("请指定要评价的课程预约");
         }
         Long uid = SecurityUtils.getUserId();
-        int sid = uid.intValue();
         Course course = courseMapper.selectCourseByCourseId(review.getBookingId());
         if (course == null) {
             throw new ServiceException("预约记录不存在");
         }
-        if (!String.valueOf(uid).equals(course.getStudentId())) {
+        String courseSid = course.getStudentId();
+        if (StringUtils.isEmpty(courseSid)) {
+            throw new ServiceException("预约记录数据异常");
+        }
+        String myPk = resolveMyStudentPkForReview(uid);
+        if (!courseSid.trim().equals(myPk)) {
             throw new ServiceException("只能评价自己的预约");
+        }
+        int sid;
+        try {
+            sid = Integer.parseInt(courseSid.trim());
+        } catch (NumberFormatException e) {
+            throw new ServiceException("学员编号格式异常，无法提交评价");
         }
         if (course.getStatus() == null || course.getStatus() != 1L) {
             throw new ServiceException("仅在课程已确认后可评价");
@@ -147,6 +162,20 @@ public class ReviewServiceImpl implements IReviewService {
         row.setStatus("0");
         row.setCreatedAt(new Date());
         return reviewMapper.insertReview(row);
+    }
+
+    /**
+     * course.student_id 为 student 表主键；业务登录 userId 为 users_id，需先解析到同一主键再比对。
+     */
+    private String resolveMyStudentPkForReview(Long uid) {
+        if (uid == null) {
+            throw new ServiceException("请先登录");
+        }
+        Student st = studentService.selectStudentByUserId(String.valueOf(uid));
+        if (st != null && StringUtils.isNotEmpty(st.getStudentId())) {
+            return st.getStudentId().trim();
+        }
+        return String.valueOf(uid);
     }
 
 //    @Override

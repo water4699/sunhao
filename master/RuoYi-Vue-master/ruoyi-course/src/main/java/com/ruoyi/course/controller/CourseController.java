@@ -69,7 +69,6 @@ public class CourseController extends BaseController
         {
             if (StringUtils.isEmpty(sid))
             {
-                startPage();
                 return getDataTable(Collections.emptyList());
             }
             course.setStudentId(sid);

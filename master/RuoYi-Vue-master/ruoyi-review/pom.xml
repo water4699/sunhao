@@ -22,7 +22,12 @@
     <dependency>
         <groupId>com.ruoyi</groupId>
         <artifactId>ruoyi-course</artifactId>
-        <version>3.9.0</version>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.ruoyi</groupId>
+        <artifactId>ruoyi-student</artifactId>
+        <version>${project.version}</version>
     </dependency>
 </dependencies>
 </project>
