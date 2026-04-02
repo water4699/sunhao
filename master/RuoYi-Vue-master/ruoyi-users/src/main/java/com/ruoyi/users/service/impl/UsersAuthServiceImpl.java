@@ -98,6 +98,10 @@ public class UsersAuthServiceImpl implements IUsersAuthService
             s.setStatus(0L);
             s.setCreatedAt(DateUtils.getNowDate());
             s.setSubjectId("1");
+            String rn = StringUtils.isNotEmpty(row.getUsersname()) ? row.getUsersname().trim() : "学员";
+            s.setRealName(rn);
+            s.setSchool("待完善");
+            s.setGradeLevel("待完善");
             if (studentService.insertStudent(s) <= 0)
             {
                 throw new ServiceException("创建学员档案失败，请重试或联系管理员");

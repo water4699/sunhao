@@ -136,7 +136,8 @@ public class OrderServiceImpl implements IOrderService
         order.setAmount(total);
         order.setDiscountAmount(BigDecimal.ZERO);
         order.setFinalAmount(total);
-        order.setPaymentMethod("mock");
+        // 库表 payment_method 为 enum('alipay','wechat','bank','cash','credit')，不可用 mock
+        order.setPaymentMethod("wechat");
         order.setPaymentStatus(1L);
         order.setTransactionId("MOCK-" + System.currentTimeMillis());
         order.setCreatedAt(new Date());

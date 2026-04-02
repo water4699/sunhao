@@ -117,6 +117,11 @@ public class CourseServiceImpl implements ICourseService
         {
             row.setSubjectId("1");
         }
+        // sunhao-project.sql：real_name / school / grade_level 均为 NOT NULL 且无默认值
+        String rn = StringUtils.isNotEmpty(u.getUsersname()) ? u.getUsersname().trim() : "学员";
+        row.setRealName(rn);
+        row.setSchool("待完善");
+        row.setGradeLevel("待完善");
         if (studentService.insertStudent(row) <= 0 || StringUtils.isEmpty(row.getStudentId()))
         {
             throw new ServiceException("创建学员档案失败，请稍后重试或联系管理员。");
