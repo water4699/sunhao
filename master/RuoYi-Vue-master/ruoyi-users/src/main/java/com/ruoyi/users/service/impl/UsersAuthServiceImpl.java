@@ -77,6 +77,7 @@ public class UsersAuthServiceImpl implements IUsersAuthService
         row.setPhone(phone);
         row.setPassword(SecurityUtils.encryptPassword(password));
         row.setUsersType(roleKey);
+        row.setImage("");
         row.setStatus(0L);
         row.setCreateTime(DateUtils.getNowDate());
         if (usersMapper.insertUsers(row) <= 0)

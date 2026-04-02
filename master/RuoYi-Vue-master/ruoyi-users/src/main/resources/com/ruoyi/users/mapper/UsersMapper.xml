@@ -67,7 +67,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="phone != null and phone != ''">phone,</if>
             <if test="password != null and password != ''">password,</if>
             <if test="usersType != null and usersType != ''">users_type,</if>
-            <if test="image != null and image != ''">image,</if>
+            <if test="image != null">image,</if>
             <if test="status != null">status,</if>
             <if test="createTime != null">create_time,</if>
          </trim>
@@ -76,7 +76,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="phone != null and phone != ''">#{phone},</if>
             <if test="password != null and password != ''">#{password},</if>
             <if test="usersType != null and usersType != ''">#{usersType},</if>
-            <if test="image != null and image != ''">#{image},</if>
+            <if test="image != null">#{image},</if>
             <if test="status != null">#{status},</if>
             <if test="createTime != null">#{createTime},</if>
          </trim>
