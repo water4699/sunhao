@@ -80,6 +80,9 @@
 	import {
 		baseUrl
 	} from '../../../../config'
+	import {
+		getToken
+	} from '@/utils/auth'
 
 	export default {
 		data() {
@@ -110,6 +113,18 @@
 			}
 		},
 		onLoad(options) {
+			if (!getToken()) {
+				uni.showToast({
+					title: '请先登录',
+					icon: 'none'
+				})
+				setTimeout(() => {
+					uni.navigateTo({
+						url: '/pages/login'
+					})
+				}, 800)
+				return
+			}
 			this.id = (options && (options.id || options.teacherId)) || ''
 			const d = new Date()
 			this.startDate = this.fmtDate(d)
@@ -148,6 +163,13 @@
 				this.selectedTime = e.detail.value
 			},
 			handleSubmit() {
+				if (!getToken()) {
+					uni.showToast({
+						title: '请先登录',
+						icon: 'none'
+					})
+					return
+				}
 				if (!this.isFormValid) {
 					uni.showToast({
 						title: '请选择日期、时段并填写地址',

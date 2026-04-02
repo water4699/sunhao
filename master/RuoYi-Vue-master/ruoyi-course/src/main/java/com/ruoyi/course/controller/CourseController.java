@@ -1,5 +1,6 @@
 package com.ruoyi.course.controller;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.core.controller.BaseController;
@@ -23,6 +25,8 @@ import com.ruoyi.course.domain.Course;
 import com.ruoyi.course.service.ICourseService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.student.domain.Student;
+import com.ruoyi.student.service.IStudentService;
 
 /**
  * 课程管理Controller
@@ -34,6 +38,25 @@ public class CourseController extends BaseController
     @Autowired
     private ICourseService courseService;
 
+    @Autowired
+    private IStudentService studentService;
+
+    /** 业务端 users 登录 JWT 中带 *:*:*，列表/导出必须按本人 student 维度收口，避免横向越权 */
+    private String businessStudentIdOrNull()
+    {
+        LoginUser lu = SecurityUtils.getLoginUser();
+        if (lu == null || !lu.isBusinessUser())
+        {
+            return null;
+        }
+        Student st = studentService.selectStudentByUserId(String.valueOf(lu.getUserId()));
+        if (st == null || StringUtils.isEmpty(st.getStudentId()))
+        {
+            return "";
+        }
+        return st.getStudentId();
+    }
+
     /**
      * 查询课程管理列表
      */
@@ -41,6 +64,16 @@ public class CourseController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(Course course)
     {
+        String sid = businessStudentIdOrNull();
+        if (sid != null)
+        {
+            if (StringUtils.isEmpty(sid))
+            {
+                startPage();
+                return getDataTable(Collections.emptyList());
+            }
+            course.setStudentId(sid);
+        }
         startPage();
         List<Course> list = courseService.selectCourseList(course);
         return getDataTable(list);
@@ -54,7 +87,20 @@ public class CourseController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, Course course)
     {
-        List<Course> list = courseService.selectCourseList(course);
+        String sid = businessStudentIdOrNull();
+        List<Course> list;
+        if (sid != null && StringUtils.isEmpty(sid))
+        {
+            list = Collections.emptyList();
+        }
+        else
+        {
+            if (sid != null)
+            {
+                course.setStudentId(sid);
+            }
+            list = courseService.selectCourseList(course);
+        }
         ExcelUtil<Course> util = new ExcelUtil<Course>(Course.class);
         util.exportExcel(response, list, "课程管理数据");
     }
@@ -66,7 +112,17 @@ public class CourseController extends BaseController
     @GetMapping(value = "/{courseId}")
     public AjaxResult getInfo(@PathVariable("courseId") String courseId)
     {
-        return success(courseService.selectCourseByCourseId(courseId));
+        Course row = courseService.selectCourseByCourseId(courseId);
+        if (row == null)
+        {
+            return error("记录不存在");
+        }
+        String sid = businessStudentIdOrNull();
+        if (sid != null && (StringUtils.isEmpty(sid) || !sid.equals(row.getStudentId())))
+        {
+            return error("无权查看该预约");
+        }
+        return success(row);
     }
 
     /**
@@ -77,7 +133,19 @@ public class CourseController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody Course course)
     {
-        if (StringUtils.isEmpty(course.getStudentId()))
+        LoginUser lu = SecurityUtils.getLoginUser();
+        if (lu != null && lu.isBusinessUser())
+        {
+            try
+            {
+                course.setStudentId(String.valueOf(SecurityUtils.getUserId()));
+            }
+            catch (Exception e)
+            {
+                return error("请先登录后再预约");
+            }
+        }
+        else if (StringUtils.isEmpty(course.getStudentId()))
         {
             try
             {
@@ -111,6 +179,20 @@ public class CourseController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody Course course)
     {
+        String sid = businessStudentIdOrNull();
+        if (sid != null)
+        {
+            if (StringUtils.isEmpty(sid) || StringUtils.isEmpty(course.getCourseId()))
+            {
+                return error("无权修改该预约");
+            }
+            Course existing = courseService.selectCourseByCourseId(course.getCourseId());
+            if (existing == null || !sid.equals(existing.getStudentId()))
+            {
+                return error("无权修改该预约");
+            }
+            course.setStudentId(sid);
+        }
         return toAjax(courseService.updateCourse(course));
     }
 
@@ -122,6 +204,22 @@ public class CourseController extends BaseController
 	@DeleteMapping("/{courseIds}")
     public AjaxResult remove(@PathVariable String[] courseIds)
     {
+        String sid = businessStudentIdOrNull();
+        if (sid != null)
+        {
+            if (StringUtils.isEmpty(sid))
+            {
+                return error("无权删除预约");
+            }
+            for (String courseId : courseIds)
+            {
+                Course existing = courseService.selectCourseByCourseId(courseId);
+                if (existing == null || !sid.equals(existing.getStudentId()))
+                {
+                    return error("只能取消本人的预约");
+                }
+            }
+        }
         return toAjax(courseService.deleteCourseByCourseIds(courseIds));
     }
 }

@@ -1,6 +1,7 @@
 // 应用全局配置
 module.exports = {
-  // baseUrl: 'https://vue.ruoyi.vip/prod-api',
+  // 生产务必改为 https 正式域名；明文 http 易被窃听、篡改（小程序后台需配置合法 request 域名）
+  // baseUrl: 'https://your-domain.com',
   baseUrl: 'http://localhost:8080',
   // 应用信息
   appInfo: {
