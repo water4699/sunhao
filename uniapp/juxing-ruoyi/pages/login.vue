@@ -12,6 +12,10 @@
 				<view class="tab-item" :class="{ active: loginType === 'password' }" @click="switchType('password')">
 					密码登录</view>
 			</view>
+			<!-- 注册入口：首屏可见，避免密码+验证码时底部链接被挡在屏外 -->
+			<view class="register-hint" @click="goRegister">
+				<text>没有账号？</text><text class="register-strong">立即注册</text>
+			</view>
 
 			<!-- 验证码登录 -->
 			<view v-if="loginType === 'code'">
@@ -426,8 +430,22 @@
 			}
 		}
 
+		.register-hint {
+			margin: -6rpx 0 28rpx;
+			font-size: 28rpx;
+			color: #666;
+			text-align: center;
+
+			.register-strong {
+				color: #d48806;
+				font-weight: 600;
+				margin-left: 8rpx;
+			}
+		}
+
 		.footer-links {
-			margin-top: 36rpx;
+			margin-top: 28rpx;
+			margin-bottom: calc(24rpx + env(safe-area-inset-bottom));
 			text-align: center;
 		}
 
