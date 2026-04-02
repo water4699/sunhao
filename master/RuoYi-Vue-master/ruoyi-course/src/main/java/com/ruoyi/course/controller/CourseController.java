@@ -137,7 +137,13 @@ public class CourseController extends BaseController
         {
             try
             {
-                course.setStudentId(String.valueOf(SecurityUtils.getUserId()));
+                // 业务侧 course.student_id 需要落到 student.student_id（而不是 users_id）
+                String sid = businessStudentIdOrNull();
+                if (StringUtils.isEmpty(sid))
+                {
+                    return error("请先完善学生信息后再预约");
+                }
+                course.setStudentId(sid);
             }
             catch (Exception e)
             {

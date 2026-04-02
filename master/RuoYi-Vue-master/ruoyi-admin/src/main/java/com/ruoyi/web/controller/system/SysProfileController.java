@@ -66,13 +66,39 @@ public class SysProfileController extends BaseController
             su.setUserName(u.getUsersname());
             su.setNickName(u.getUsersname());
             su.setPhonenumber(u.getPhone());
-            su.setEmail("");
-            su.setSex("0");
+            // 业务库 users 表目前不落 email/sex；这里优先从登录态的 stub 里取，保证“刚修改后再次打开”可见。
+            String stubEmail = (loginUser.getUser() != null && StringUtils.isNotEmpty(loginUser.getUser().getEmail()))
+                    ? loginUser.getUser().getEmail()
+                    : "";
+            String stubSex = (loginUser.getUser() != null && StringUtils.isNotEmpty(loginUser.getUser().getSex()))
+                    ? loginUser.getUser().getSex()
+                    : "0";
+            su.setEmail(stubEmail);
+            su.setSex(stubSex);
             su.setAvatar(StringUtils.isNotEmpty(u.getImage()) ? u.getImage() : "");
             su.setCreateTime(u.getCreateTime());
             AjaxResult ajax = AjaxResult.success(su);
-            ajax.put("roleGroup", "");
-            ajax.put("postGroup", "");
+            // 身份（users.users_type）映射到展示用字段
+            String usersType = u.getUsersType();
+            String roleGroup;
+            if ("teacher".equalsIgnoreCase(usersType))
+            {
+                roleGroup = "教师";
+            }
+            else if ("parent".equalsIgnoreCase(usersType))
+            {
+                roleGroup = "家长";
+            }
+            else if ("student".equalsIgnoreCase(usersType))
+            {
+                roleGroup = "学生";
+            }
+            else
+            {
+                roleGroup = StringUtils.isEmpty(usersType) ? "" : usersType;
+            }
+            ajax.put("roleGroup", roleGroup);
+            ajax.put("postGroup", roleGroup);
             return ajax;
         }
         SysUser user = loginUser.getUser();
@@ -125,11 +151,11 @@ public class SysProfileController extends BaseController
                 stub.setNickName(db.getUsersname());
                 stub.setUserName(db.getUsersname());
                 stub.setPhonenumber(db.getPhone());
-                if (user.getEmail() != null)
+                if (StringUtils.isNotEmpty(user.getEmail()))
                 {
                     stub.setEmail(user.getEmail());
                 }
-                if (user.getSex() != null)
+                if (StringUtils.isNotEmpty(user.getSex()))
                 {
                     stub.setSex(user.getSex());
                 }
