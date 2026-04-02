@@ -17,6 +17,11 @@ public interface UsersMapper
     public Users selectUsersByUsersId(String usersId);
 
     /**
+     * 按主键查询（含 password，用于改密等）
+     */
+    public Users selectUsersByUsersIdForAuth(String usersId);
+
+    /**
      * 按登录名查询（含 password，用于认证）
      */
     public Users selectUsersByUsersnameForAuth(String usersname);

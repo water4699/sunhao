@@ -17,6 +17,21 @@ public interface IUsersService
     public Users selectUsersByUsersId(String usersId);
 
     /**
+     * 按主键查询（含 password）
+     */
+    public Users selectUsersByUsersIdForAuth(String usersId);
+
+    /**
+     * 精确用户名占用数（用于昵称/用户名唯一校验）
+     */
+    public int countUsersByUsersname(String usersname);
+
+    /**
+     * 按手机号查询（含 password，用于占用校验）
+     */
+    public Users selectUsersByPhoneForAuth(String phone);
+
+    /**
      * 查询用户总列表
      * 
      * @param users 用户总

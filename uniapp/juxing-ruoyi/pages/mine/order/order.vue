@@ -144,10 +144,30 @@ export default {
   mounted() {
     this.fetchCourses()
   },
+  onShow() {
+    if (this.userId) {
+      this.fetchCourses()
+      if (this.topTab === 1) {
+        this.fetchProductOrders()
+      }
+    }
+  },
+  watch: {
+    userId(val) {
+      if (val) {
+        this.isLoaded = false
+        this.productLoaded = false
+        this.fetchCourses()
+        if (this.topTab === 1) {
+          this.fetchProductOrders()
+        }
+      }
+    }
+  },
   methods: {
     switchTop(tab) {
       this.topTab = tab
-      if (tab === 1 && !this.productLoaded) {
+      if (tab === 1) {
         this.fetchProductOrders()
       }
     },

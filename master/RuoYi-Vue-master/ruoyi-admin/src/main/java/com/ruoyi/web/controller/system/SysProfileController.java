@@ -25,6 +25,8 @@ import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.common.utils.file.MimeTypeUtils;
 import com.ruoyi.framework.web.service.TokenService;
 import com.ruoyi.system.service.ISysUserService;
+import com.ruoyi.users.domain.Users;
+import com.ruoyi.users.service.IUsersService;
 
 /**
  * 个人信息 业务处理
@@ -39,6 +41,9 @@ public class SysProfileController extends BaseController
     private ISysUserService userService;
 
     @Autowired
+    private IUsersService usersService;
+
+    @Autowired
     private TokenService tokenService;
 
     /**
@@ -48,6 +53,28 @@ public class SysProfileController extends BaseController
     public AjaxResult profile()
     {
         LoginUser loginUser = getLoginUser();
+        if (loginUser.isBusinessUser())
+        {
+            String uid = String.valueOf(loginUser.getUserId());
+            Users u = usersService.selectUsersByUsersId(uid);
+            if (u == null)
+            {
+                return error("用户不存在");
+            }
+            SysUser su = new SysUser();
+            su.setUserId(loginUser.getUserId());
+            su.setUserName(u.getUsersname());
+            su.setNickName(u.getUsersname());
+            su.setPhonenumber(u.getPhone());
+            su.setEmail("");
+            su.setSex("0");
+            su.setAvatar(StringUtils.isNotEmpty(u.getImage()) ? u.getImage() : "");
+            su.setCreateTime(u.getCreateTime());
+            AjaxResult ajax = AjaxResult.success(su);
+            ajax.put("roleGroup", "");
+            ajax.put("postGroup", "");
+            return ajax;
+        }
         SysUser user = loginUser.getUser();
         AjaxResult ajax = AjaxResult.success(user);
         ajax.put("roleGroup", userService.selectUserRoleGroup(loginUser.getUsername()));
@@ -63,6 +90,54 @@ public class SysProfileController extends BaseController
     public AjaxResult updateProfile(@RequestBody SysUser user)
     {
         LoginUser loginUser = getLoginUser();
+        if (loginUser.isBusinessUser())
+        {
+            String uid = String.valueOf(loginUser.getUserId());
+            Users db = usersService.selectUsersByUsersId(uid);
+            if (db == null)
+            {
+                return error("用户不存在");
+            }
+            if (StringUtils.isNotEmpty(user.getNickName()))
+            {
+                if (!user.getNickName().equals(db.getUsersname())
+                    && usersService.countUsersByUsersname(user.getNickName()) > 0)
+                {
+                    return error("修改失败，该昵称已被占用");
+                }
+                db.setUsersname(user.getNickName());
+            }
+            if (StringUtils.isNotEmpty(user.getPhonenumber()))
+            {
+                if (!user.getPhonenumber().equals(db.getPhone()))
+                {
+                    Users byPhone = usersService.selectUsersByPhoneForAuth(user.getPhonenumber());
+                    if (byPhone != null && !uid.equals(byPhone.getUsersId()))
+                    {
+                        return error("修改失败，手机号码已存在");
+                    }
+                }
+                db.setPhone(user.getPhonenumber());
+            }
+            if (usersService.updateUsers(db) > 0)
+            {
+                SysUser stub = loginUser.getUser();
+                stub.setNickName(db.getUsersname());
+                stub.setUserName(db.getUsersname());
+                stub.setPhonenumber(db.getPhone());
+                if (user.getEmail() != null)
+                {
+                    stub.setEmail(user.getEmail());
+                }
+                if (user.getSex() != null)
+                {
+                    stub.setSex(user.getSex());
+                }
+                tokenService.setLoginUser(loginUser);
+                return success();
+            }
+            return error("修改个人信息异常，请联系管理员");
+        }
         SysUser currentUser = loginUser.getUser();
         currentUser.setNickName(user.getNickName());
         currentUser.setEmail(user.getEmail());
@@ -96,6 +171,34 @@ public class SysProfileController extends BaseController
         String newPassword = params.get("newPassword");
         LoginUser loginUser = getLoginUser();
         Long userId = loginUser.getUserId();
+        if (loginUser.isBusinessUser())
+        {
+            Users u = usersService.selectUsersByUsersIdForAuth(String.valueOf(userId));
+            if (u == null || StringUtils.isEmpty(u.getPassword()))
+            {
+                return error("修改密码失败，账号未设置密码或用户不存在");
+            }
+            if (!SecurityUtils.matchesPassword(oldPassword, u.getPassword()))
+            {
+                return error("修改密码失败，旧密码错误");
+            }
+            if (SecurityUtils.matchesPassword(newPassword, u.getPassword()))
+            {
+                return error("新密码不能与旧密码相同");
+            }
+            String enc = SecurityUtils.encryptPassword(newPassword);
+            Users patch = new Users();
+            patch.setUsersId(String.valueOf(userId));
+            patch.setPassword(enc);
+            if (usersService.updateUsers(patch) > 0)
+            {
+                loginUser.getUser().setPwdUpdateDate(DateUtils.getNowDate());
+                loginUser.getUser().setPassword(enc);
+                tokenService.setLoginUser(loginUser);
+                return success();
+            }
+            return error("修改密码异常，请联系管理员");
+        }
         String password = loginUser.getPassword();
         if (!SecurityUtils.matchesPassword(oldPassword, password))
         {
@@ -128,6 +231,26 @@ public class SysProfileController extends BaseController
         {
             LoginUser loginUser = getLoginUser();
             String avatar = FileUploadUtils.upload(RuoYiConfig.getAvatarPath(), file, MimeTypeUtils.IMAGE_EXTENSION, true);
+            if (loginUser.isBusinessUser())
+            {
+                Users patch = new Users();
+                patch.setUsersId(String.valueOf(loginUser.getUserId()));
+                patch.setImage(avatar);
+                if (usersService.updateUsers(patch) <= 0)
+                {
+                    return error("上传图片异常，请联系管理员");
+                }
+                String oldAvatar = loginUser.getUser().getAvatar();
+                if (StringUtils.isNotEmpty(oldAvatar))
+                {
+                    FileUtils.deleteFile(RuoYiConfig.getProfile() + FileUtils.stripPrefix(oldAvatar));
+                }
+                AjaxResult ajax = AjaxResult.success();
+                ajax.put("imgUrl", avatar);
+                loginUser.getUser().setAvatar(avatar);
+                tokenService.setLoginUser(loginUser);
+                return ajax;
+            }
             if (userService.updateUserAvatar(loginUser.getUserId(), avatar))
             {
                 String oldAvatar = loginUser.getUser().getAvatar();

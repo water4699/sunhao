@@ -29,7 +29,23 @@ public class UsersServiceImpl implements IUsersService
         return usersMapper.selectUsersByUsersId(usersId);
     }
 
+    @Override
+    public Users selectUsersByUsersIdForAuth(String usersId)
+    {
+        return usersMapper.selectUsersByUsersIdForAuth(usersId);
+    }
 
+    @Override
+    public int countUsersByUsersname(String usersname)
+    {
+        return usersMapper.countUsersByUsersname(usersname);
+    }
+
+    @Override
+    public Users selectUsersByPhoneForAuth(String phone)
+    {
+        return usersMapper.selectUsersByPhoneForAuth(phone);
+    }
 
     /**
      * 查询用户总列表

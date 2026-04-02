@@ -42,6 +42,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where users_id = #{usersId}
     </select>
 
+    <select id="selectUsersByUsersIdForAuth" parameterType="String" resultMap="UsersAuthResult">
+        <include refid="selectUsersVoAuth"/>
+        where users_id = #{usersId} limit 1
+    </select>
+
     <select id="selectUsersByUsersnameForAuth" parameterType="String" resultMap="UsersAuthResult">
         <include refid="selectUsersVoAuth"/>
         where usersname = #{usersname} limit 1
