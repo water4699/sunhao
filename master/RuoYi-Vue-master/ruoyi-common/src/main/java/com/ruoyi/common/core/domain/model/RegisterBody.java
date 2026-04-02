@@ -1,5 +1,8 @@
 package com.ruoyi.common.core.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * 用户注册对象
  * 
@@ -14,6 +17,8 @@ public class RegisterBody extends LoginBody
      * 注册时绑定角色：空或未传则分配 common（普通角色，role_id=2）；
      * student=学生、parent=家长（与学生同属选课侧）、teacher=教师（见 docs/sql/register_roles_student_teacher.sql）
      */
+    @JsonProperty("registerRole")
+    @JsonAlias({ "register_role", "RegisterRole", "registerType" })
     private String registerRole;
 
     public String getPhone()
