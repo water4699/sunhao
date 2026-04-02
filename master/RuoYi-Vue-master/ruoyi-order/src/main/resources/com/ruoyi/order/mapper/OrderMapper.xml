@@ -44,7 +44,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <insert id="insertOrder" parameterType="Order" useGeneratedKeys="true" keyProperty="orderId">
-        insert into order
+        insert into `order`
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userId != null and userId != ''">user_id,</if>
             <if test="courseId != null and courseId != ''">course_id,</if>
@@ -72,7 +72,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <update id="updateOrder" parameterType="Order">
-        update order
+        update `order`
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null and userId != ''">user_id = #{userId},</if>
             <if test="courseId != null and courseId != ''">course_id = #{courseId},</if>
@@ -89,11 +89,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteOrderByOrderId" parameterType="String">
-        delete from order where order_id = #{orderId}
+        delete from `order` where order_id = #{orderId}
     </delete>
 
     <delete id="deleteOrderByOrderIds" parameterType="String">
-        delete from order where order_id in 
+        delete from `order` where order_id in 
         <foreach item="orderId" collection="array" open="(" separator="," close=")">
             #{orderId}
         </foreach>

@@ -108,6 +108,15 @@ public class CourseServiceImpl implements ICourseService
         row.setUserId(key);
         row.setStatus(0L);
         row.setCreatedAt(DateUtils.getNowDate());
+        // 库表 subject_id 常 NOT NULL；约课请求里一般有 subjectId，否则用 1 占位（须与 subject 表数据一致）
+        if (course != null && StringUtils.isNotEmpty(course.getSubjectId()))
+        {
+            row.setSubjectId(course.getSubjectId().trim());
+        }
+        else
+        {
+            row.setSubjectId("1");
+        }
         if (studentService.insertStudent(row) <= 0 || StringUtils.isEmpty(row.getStudentId()))
         {
             throw new ServiceException("创建学员档案失败，请稍后重试或联系管理员。");
