@@ -51,7 +51,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="studentId != null and studentId != ''">student_id,</if>
             <if test="teacherId != null and teacherId != ''">teacher_id,</if>
             <if test="subjectId != null and subjectId != ''">subject_id,</if>
-            <if test="gradeId != null">grade_id,</if>
             <if test="status != null">status,</if>
             <if test="startDate != null">start_date,</if>
             <if test="address != null and address != ''">address,</if>
@@ -59,12 +58,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="completedHours != null">completed_hours,</if>
             <if test="hourlyRate != null">hourly_rate,</if>
             <if test="createdAt != null">created_at,</if>
+            grade_id,
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
             <if test="teacherId != null and teacherId != ''">#{teacherId},</if>
             <if test="subjectId != null and subjectId != ''">#{subjectId},</if>
-            <if test="gradeId != null">#{gradeId},</if>
             <if test="status != null">#{status},</if>
             <if test="startDate != null">#{startDate},</if>
             <if test="address != null and address != ''">#{address},</if>
@@ -72,6 +71,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="completedHours != null">#{completedHours},</if>
             <if test="hourlyRate != null">#{hourlyRate},</if>
             <if test="createdAt != null">#{createdAt},</if>
+            #{gradeId},
          </trim>
     </insert>
 

@@ -61,7 +61,10 @@ public class CourseServiceImpl implements ICourseService
         return courseMapper.insertCourse(course);
     }
 
-    /** 库表 grade_id 常 NOT NULL；小程序预约可能不传，则从教师档案带出，否则写空串 */
+    /**
+     * 库表 grade_id 常 NOT NULL；小程序预约可能不传，则从教师档案带出。
+     * 仍为空时用 "1" 占位（请保证 grade_level 存在 id=1，或按库改为实际默认年级）。
+     */
     private void fillGradeIdIfMissing(Course course)
     {
         if (course == null || StringUtils.isNotEmpty(course.getGradeId()))
@@ -74,10 +77,12 @@ public class CourseServiceImpl implements ICourseService
             if (t != null && StringUtils.isNotEmpty(t.getGradeId()))
             {
                 course.setGradeId(t.getGradeId());
-                return;
             }
         }
-        course.setGradeId("");
+        if (StringUtils.isEmpty(course.getGradeId()))
+        {
+            course.setGradeId("1");
+        }
     }
 
     private void validateNoDuplicateBooking(Course course)
