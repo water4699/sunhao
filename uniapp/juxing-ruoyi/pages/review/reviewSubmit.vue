@@ -52,7 +52,10 @@ export default {
         setTimeout(() => {
           uni.navigateBack({ fail: () => uni.switchTab({ url: '/pages/mine/index' }) })
         }, 800)
-      }).catch(() => {})
+      }).catch((err) => {
+        const msg = (err && err.msg) ? err.msg : '提交失败，请稍后重试'
+        uni.showToast({ title: msg, icon: 'none' })
+      })
     }
   }
 }

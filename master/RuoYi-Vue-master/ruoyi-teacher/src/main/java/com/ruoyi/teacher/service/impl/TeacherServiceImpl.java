@@ -98,4 +98,10 @@ public class TeacherServiceImpl implements ITeacherService
     {
         return teacherMapper.countTeacherByUserId(userId);
     }
+
+    @Override
+    public Teacher selectTeacherByUserId(String userId)
+    {
+        return teacherMapper.selectTeacherByUserId(userId);
+    }
 }

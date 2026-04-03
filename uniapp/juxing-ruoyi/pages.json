@@ -37,6 +37,24 @@
 	    "navigationBarTitleText": "进步商品"
 	  }
 	},
+	{
+	  "path": "pages/coursePublish/coursePublish",
+	  "style": {
+	    "navigationBarTitleText": "上架课程"
+	  }
+	},
+	{
+	  "path": "pages/courses/courses",
+	  "style": {
+	    "navigationBarTitleText": "课程列表"
+	  }
+	},
+	{
+	  "path": "pages/courses/courseDetail",
+	  "style": {
+	    "navigationBarTitleText": "课程详情"
+	  }
+	},
     {
       "path": "pages/mine/index",
       "style": {

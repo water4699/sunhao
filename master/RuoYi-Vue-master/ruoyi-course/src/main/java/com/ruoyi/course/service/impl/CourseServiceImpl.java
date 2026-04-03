@@ -8,6 +8,8 @@ import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.course.mapper.CourseMapper;
 import com.ruoyi.course.domain.Course;
+import com.ruoyi.course.domain.TeacherPublishedCourse;
+import com.ruoyi.course.mapper.TeacherPublishedCourseMapper;
 import com.ruoyi.course.service.ICourseService;
 import com.ruoyi.student.domain.Student;
 import com.ruoyi.student.service.IStudentService;
@@ -24,6 +26,9 @@ public class CourseServiceImpl implements ICourseService
 {
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private TeacherPublishedCourseMapper teacherPublishedCourseMapper;
 
     @Autowired
     private ITeacherService teacherService;
@@ -71,6 +76,48 @@ public class CourseServiceImpl implements ICourseService
         fillGradeIdIfMissing(course);
         validateNoDuplicateBooking(course);
         return courseMapper.insertCourse(course);
+    }
+
+    @Override
+    public int insertTeacherPublishedCourse(TeacherPublishedCourse course)
+    {
+        if (StringUtils.isEmpty(course.getTeacherId()))
+        {
+            throw new ServiceException("老师信息不能为空");
+        }
+        if (StringUtils.isEmpty(course.getSubjectId()))
+        {
+            throw new ServiceException("请选择科目");
+        }
+        if (StringUtils.isEmpty(course.getGradeId()))
+        {
+            course.setGradeId("1");
+        }
+        if (course.getStatus() == null)
+        {
+            course.setStatus(0L);
+        }
+        if (StringUtils.isEmpty(course.getExpectedHours()))
+        {
+            course.setExpectedHours("1");
+        }
+        if (course.getCreatedAt() == null)
+        {
+            course.setCreatedAt(DateUtils.getNowDate());
+        }
+        return teacherPublishedCourseMapper.insertTeacherPublishedCourse(course);
+    }
+
+    @Override
+    public List<TeacherPublishedCourse> selectTeacherPublishedCourseList(TeacherPublishedCourse query)
+    {
+        return teacherPublishedCourseMapper.selectTeacherPublishedCourseList(query);
+    }
+
+    @Override
+    public TeacherPublishedCourse selectTeacherPublishedCourseById(String publishId)
+    {
+        return teacherPublishedCourseMapper.selectTeacherPublishedCourseById(publishId);
     }
 
     /**

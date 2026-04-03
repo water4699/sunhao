@@ -9,6 +9,10 @@ public class OrderAppVo extends Order
 
     /** 商品名称，来自 product.name；无关联时为空 */
     private String productName;
+    /** 学习课程名称，来自 teacher_published_course + 年级/科目 */
+    private String courseName;
+    /** 订单类型：product/course */
+    private String itemType;
 
     public String getProductName()
     {
@@ -18,5 +22,25 @@ public class OrderAppVo extends Order
     public void setProductName(String productName)
     {
         this.productName = productName;
+    }
+
+    public String getCourseName()
+    {
+        return courseName;
+    }
+
+    public void setCourseName(String courseName)
+    {
+        this.courseName = courseName;
+    }
+
+    public String getItemType()
+    {
+        return itemType;
+    }
+
+    public void setItemType(String itemType)
+    {
+        this.itemType = itemType;
     }
 }

@@ -17,6 +17,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.order.domain.AppCourseOrderRequest;
 import com.ruoyi.order.domain.AppProductOrderRequest;
 import com.ruoyi.order.domain.Order;
 import com.ruoyi.order.domain.OrderAppVo;
@@ -88,6 +89,17 @@ public class OrderController extends BaseController
     {
         Long uid = SecurityUtils.getUserId();
         String orderId = orderService.createProductOrderForUser(uid, body.getProductId(), body.getQuantity());
+        return AjaxResult.success(orderId);
+    }
+
+    /**
+     * 小程序：创建学习课程订单（模拟支付成功）
+     */
+    @PostMapping("/app/course")
+    public AjaxResult appCreateCourseOrder(@RequestBody AppCourseOrderRequest body)
+    {
+        Long uid = SecurityUtils.getUserId();
+        String orderId = orderService.createPublishedCourseOrderForUser(uid, body.getPublishId(), body.getQuantity());
         return AjaxResult.success(orderId);
     }
 

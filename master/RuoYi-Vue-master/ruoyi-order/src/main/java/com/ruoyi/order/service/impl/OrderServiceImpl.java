@@ -155,6 +155,55 @@ public class OrderServiceImpl implements IOrderService
     }
 
     @Override
+    public String createPublishedCourseOrderForUser(Long userId, String publishId, Integer quantity)
+    {
+        if (userId == null)
+        {
+            throw new ServiceException("请先登录");
+        }
+        if (StringUtils.isEmpty(publishId))
+        {
+            throw new ServiceException("请选择课程");
+        }
+        int q = quantity == null ? 1 : quantity;
+        if (q < 1)
+        {
+            throw new ServiceException("购买数量至少为 1");
+        }
+        if (orderMapper.countPublishedCourseById(publishId) <= 0)
+        {
+            throw new ServiceException("课程不存在");
+        }
+        Long st = orderMapper.selectPublishedCourseStatusById(publishId);
+        if (st != null && st != 0L)
+        {
+            throw new ServiceException("课程已下架");
+        }
+        BigDecimal unit = orderMapper.selectPublishedCoursePriceById(publishId);
+        if (unit == null)
+        {
+            unit = BigDecimal.ZERO;
+        }
+        BigDecimal total = unit.multiply(BigDecimal.valueOf(q));
+        Order order = new Order();
+        order.setUserId(String.valueOf(userId));
+        order.setCourseId(publishId);
+        order.setAmount(total);
+        order.setDiscountAmount(BigDecimal.ZERO);
+        order.setFinalAmount(total);
+        order.setPaymentMethod("wechat");
+        order.setPaymentStatus(1L);
+        order.setTransactionId("COURSE-" + System.currentTimeMillis());
+        order.setCreatedAt(new Date());
+        int rows = orderMapper.insertOrder(order);
+        if (rows <= 0)
+        {
+            throw new ServiceException("下单失败");
+        }
+        return order.getOrderId();
+    }
+
+    @Override
     public List<OrderAppVo> selectAppOrderListByUserId(String userId)
     {
         return orderMapper.selectAppOrderListByUserId(userId);

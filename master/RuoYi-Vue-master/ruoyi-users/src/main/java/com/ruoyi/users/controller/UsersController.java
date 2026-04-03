@@ -2,6 +2,7 @@ package com.ruoyi.users.controller;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ruoyi.common.core.redis.RedisCache;
@@ -26,6 +27,12 @@ import com.ruoyi.common.core.page.TableDataInfo;
 @RequestMapping("/system/users")
 public class UsersController extends BaseController
 {
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^1\\d{10}$");
+
+    private static final String SMS_CODE_KEY_PREFIX = "sms:login:code:";
+
+    private static final String SMS_SEND_LIMIT_KEY_PREFIX = "sms:login:send:limit:";
+
     @Autowired
     private IUsersService usersService;
     @Autowired
@@ -101,8 +108,18 @@ public class UsersController extends BaseController
 
     @GetMapping("/getUserCode")
     public AjaxResult getUserCode(@RequestParam String phone) {
+        if (phone == null || !PHONE_PATTERN.matcher(phone).matches())
+        {
+            return AjaxResult.error("手机号格式不正确");
+        }
+        String sendLimitKey = SMS_SEND_LIMIT_KEY_PREFIX + phone;
+        if (redisCache.getCacheObject(sendLimitKey) != null)
+        {
+            return AjaxResult.error("发送过于频繁，请稍后再试");
+        }
         String code = CodeUtils.generateValidateCode(6) + "";
-        redisCache.setCacheObject(phone, code, 1, TimeUnit.MINUTES);
+        redisCache.setCacheObject(SMS_CODE_KEY_PREFIX + phone, code, 1, TimeUnit.MINUTES);
+        redisCache.setCacheObject(sendLimitKey, 1, 60, TimeUnit.SECONDS);
         return AjaxResult.success(code);
     }
 }

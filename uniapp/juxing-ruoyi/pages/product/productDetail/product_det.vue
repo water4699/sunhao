@@ -22,7 +22,7 @@
 		</view>
 
 		<!-- 底部购买按钮 -->
-		<button class="buy-btn" @click="findProductOrder(input)">立即购买</button>
+			<button class="buy-btn" @click="findProductOrder">立即购买</button>
 	</view>
 </template>
 
@@ -31,6 +31,7 @@
 	import {
 		getOneProduct
 	} from '@/api/Product/findAllProduct'
+	import { getPublishedCourseDetail } from '@/api/course/course'
 	import {
 		baseUrl
 	} from '../../../config';
@@ -40,6 +41,7 @@
 			return {
 				// 商品数据，实际可从接口获取
 				id:'',
+				kind: 'product',
 				imgUrl: 'https://example.com/your-img-url.jpg', // 替换为真实商品主图地址
 				goodsName: '高中数学精品教材',
 				goodsType: '教育书籍',
@@ -51,6 +53,7 @@
 		},
 		onLoad(e){
 			this.id = e.id;
+			this.kind = (e && e.kind) ? e.kind : 'product'
 			console.log(e.id);
 		},
 		onReady() {
@@ -63,6 +66,19 @@
 		},
 		methods: {
 			init() {
+				if (this.kind === 'course') {
+					getPublishedCourseDetail(this.id).then(res => {
+						const msg = res.data || {}
+						this.goodsName = `${msg.gradeName || msg.grade_name || ''} ${msg.subjectName || msg.subject_name || ''}`.trim() || `课程#${this.id}`
+						const img = msg.teacherImage || msg.teacher_image || ''
+						this.imgUrl = img ? (String(img).startsWith('http') ? img : (baseUrl + img)) : 'https://ai-public.mastergo.com/ai/img_res/e4f9c701113f7cb14672be2c13df1701.jpg'
+						this.goodsType = '学习课程'
+						this.price = msg.hourlyRate || msg.hourly_rate || 0
+						this.stock = '∞'
+						this.descContent = `老师：${msg.teacherName || msg.teacher_name || '-'}\n开课：${msg.startDate || '-'}\n地址：${msg.address || '-'}`
+					})
+					return
+				}
 				getOneProduct(this.id).then(res => {
 					var msg = res.data;
 					this.goodsName=msg.name;
@@ -77,7 +93,7 @@
 			findProductOrder(){
 			    console.log('传送到的参数:',this.id);
 			    uni.navigateTo({
-			        url: `/pages/product/productDetail/order/order?id=${this.id}`
+			        url: `/pages/product/productDetail/order/order?id=${this.id}&kind=${this.kind}`
 			    });
 			},
 			// 预览大图

@@ -2,6 +2,7 @@ package com.ruoyi.course.service;
 
 import java.util.List;
 import com.ruoyi.course.domain.Course;
+import com.ruoyi.course.domain.TeacherPublishedCourse;
 
 /**
  * 课程管理Service接口
@@ -31,6 +32,18 @@ public interface ICourseService
      * @return 结果
      */
     public int insertCourse(Course course);
+
+    /**
+     * 老师上架课程（无 studentId）
+     *
+     * @param course 课程
+     * @return 结果
+     */
+    public int insertTeacherPublishedCourse(TeacherPublishedCourse course);
+
+    public java.util.List<TeacherPublishedCourse> selectTeacherPublishedCourseList(TeacherPublishedCourse query);
+
+    public TeacherPublishedCourse selectTeacherPublishedCourseById(String publishId);
 
     /**
      * 修改课程管理

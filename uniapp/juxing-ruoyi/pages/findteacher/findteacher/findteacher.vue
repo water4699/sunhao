@@ -114,6 +114,19 @@
 		mounted() {
 			this.bootstrap()
 		},
+			onShow() {
+				try {
+					const roles = (this.$store && this.$store.getters && this.$store.getters.roles) || []
+					uni.setTabBarItem({
+						index: 1,
+						text: roles.includes('teacher') ? '发布课程' : '找老师'
+					})
+					if (roles.includes('teacher')) {
+						uni.redirectTo({ url: '/pages/coursePublish/coursePublish?from=tab' })
+						return
+					}
+				} catch (e) {}
+			},
 		methods: {
 			async bootstrap() {
 				try {

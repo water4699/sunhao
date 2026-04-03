@@ -22,11 +22,14 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.course.domain.Course;
+import com.ruoyi.course.domain.TeacherPublishedCourse;
 import com.ruoyi.course.service.ICourseService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.student.domain.Student;
 import com.ruoyi.student.service.IStudentService;
+import com.ruoyi.teacher.domain.Teacher;
+import com.ruoyi.teacher.service.ITeacherService;
 
 /**
  * 课程管理Controller
@@ -40,6 +43,9 @@ public class CourseController extends BaseController
 
     @Autowired
     private IStudentService studentService;
+
+    @Autowired
+    private ITeacherService teacherService;
 
     /** 业务端 users 登录 JWT 中带 *:*:*，列表/导出必须按本人 student 维度收口，避免横向越权 */
     private String businessStudentIdOrNull()
@@ -139,9 +145,10 @@ public class CourseController extends BaseController
             {
                 // 业务侧 course.student_id 需要落到 student.student_id（而不是 users_id）
                 String sid = businessStudentIdOrNull();
+                // 无 student 档案时，先传 users_id，交给 Service 自动补建 student 档案
                 if (StringUtils.isEmpty(sid))
                 {
-                    return error("请先完善学生信息后再预约");
+                    sid = String.valueOf(lu.getUserId());
                 }
                 course.setStudentId(sid);
             }
@@ -174,6 +181,102 @@ public class CourseController extends BaseController
             course.setCreatedAt(new Date());
         }
         return toAjax(courseService.insertCourse(course));
+    }
+
+    /**
+     * 小程序老师：上架课程（仅教师且入驻审核通过可用）
+     */
+    @PostMapping("/app/publish")
+    public AjaxResult appPublish(@RequestBody Course course)
+    {
+        LoginUser lu = SecurityUtils.getLoginUser();
+        if (lu == null || !lu.isBusinessUser())
+        {
+            return error("请先登录");
+        }
+        if (!"teacher".equalsIgnoreCase(lu.getBusinessUsersType()))
+        {
+            return error("仅老师账号可上架课程");
+        }
+        Teacher teacher = teacherService.selectTeacherByUserId(String.valueOf(lu.getUserId()));
+        if (teacher == null)
+        {
+            return error("请先提交老师入驻申请");
+        }
+        if (teacher.getStatus() == null || teacher.getStatus() != 1L)
+        {
+            return error("入驻申请审核通过后才可上架课程");
+        }
+        if (course.getStartDate() == null)
+        {
+            return error("请选择开课日期");
+        }
+        if (StringUtils.isEmpty(course.getAddress()))
+        {
+            return error("请输入上课地址或课程说明");
+        }
+        course.setTeacherId(teacher.getTeacherId());
+        course.setStudentId(null);
+        if (StringUtils.isEmpty(course.getSubjectId()) && teacher.getSubjectId() != null)
+        {
+            course.setSubjectId(String.valueOf(teacher.getSubjectId()));
+        }
+        if (course.getHourlyRate() == null)
+        {
+            course.setHourlyRate(teacher.getHourlyRate());
+        }
+        if (course.getHourlyRate() == null)
+        {
+            return error("请输入课时费用");
+        }
+        if (StringUtils.isEmpty(course.getGradeId()))
+        {
+            course.setGradeId(teacher.getGradeId());
+        }
+        TeacherPublishedCourse published = new TeacherPublishedCourse();
+        published.setTeacherId(course.getTeacherId());
+        published.setSubjectId(course.getSubjectId());
+        published.setGradeId(course.getGradeId());
+        published.setStatus(0L);
+        published.setStartDate(course.getStartDate());
+        published.setAddress(course.getAddress());
+        published.setExpectedHours(course.getExpectedHours());
+        published.setHourlyRate(course.getHourlyRate());
+        published.setCreatedAt(course.getCreatedAt());
+        return toAjax(courseService.insertTeacherPublishedCourse(published));
+    }
+
+    /**
+     * 小程序：老师已发布课程列表（默认只查上架中 status=0）
+     */
+    @GetMapping("/app/published/list")
+    public TableDataInfo appPublishedList(TeacherPublishedCourse query)
+    {
+        if (query == null)
+        {
+            query = new TeacherPublishedCourse();
+        }
+        if (query.getStatus() == null)
+        {
+            query.setStatus(0L);
+        }
+        startPage();
+        List<TeacherPublishedCourse> list = courseService.selectTeacherPublishedCourseList(query);
+        return getDataTable(list);
+    }
+
+    /**
+     * 小程序：老师已发布课程详情
+     */
+    @GetMapping("/app/published/{publishId}")
+    public AjaxResult appPublishedDetail(@PathVariable("publishId") String publishId)
+    {
+        TeacherPublishedCourse row = courseService.selectTeacherPublishedCourseById(publishId);
+        if (row == null)
+        {
+            return error("课程不存在");
+        }
+        return success(row);
     }
 
     /**

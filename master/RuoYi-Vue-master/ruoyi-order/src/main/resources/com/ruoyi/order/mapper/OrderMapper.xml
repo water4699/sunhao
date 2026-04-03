@@ -111,10 +111,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                o.payment_status as paymentStatus,
                o.transaction_id as transactionId,
                o.created_at as createdAt,
-               p.name as productName
+               p.name as productName,
+               concat(ifnull(g.name, ''), ' ', ifnull(s.name, '')) as courseName,
+               case when o.transaction_id like 'COURSE-%' then 'course' else 'product' end as itemType
         from `order` o
-        left join product p on o.course_id = p.product_id
+        left join product p
+               on o.course_id = p.product_id
+              and (o.transaction_id is null or o.transaction_id not like 'COURSE-%')
+        left join teacher_published_course tpc
+               on o.course_id = tpc.publish_id
+              and o.transaction_id like 'COURSE-%'
+        left join subject s on tpc.subject_id = s.subject_id
+        left join grade_level g on tpc.grade_id = g.grade_id
         where o.user_id = #{userId}
         order by o.created_at desc
+    </select>
+
+    <select id="countPublishedCourseById" resultType="int">
+        select count(*) from teacher_published_course where publish_id = #{publishId}
+    </select>
+
+    <select id="selectPublishedCourseStatusById" resultType="long">
+        select status from teacher_published_course where publish_id = #{publishId} limit 1
+    </select>
+
+    <select id="selectPublishedCoursePriceById" resultType="java.math.BigDecimal">
+        select hourly_rate from teacher_published_course where publish_id = #{publishId} limit 1
     </select>
 </mapper>

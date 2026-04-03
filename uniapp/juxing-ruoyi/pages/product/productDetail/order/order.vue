@@ -38,7 +38,8 @@
 
 <script>
 import { getOneProduct } from '@/api/Product/findAllProduct'
-import { createAppProductOrder } from '@/api/order/order'
+import { createAppProductOrder, createAppCourseOrder } from '@/api/order/order'
+import { getPublishedCourseDetail } from '@/api/course/course'
 import { getToken } from '@/utils/auth'
 import { baseUrl } from '../../../../config'
 
@@ -46,6 +47,7 @@ export default {
 	data() {
 		return {
 			id: '',
+			kind: 'product',
 			count: 1,
 			goodsInfo: {
 				name: '',
@@ -63,11 +65,24 @@ export default {
 	},
 	onLoad(options) {
 		this.id = (options && options.id) ? options.id : ''
+		this.kind = (options && options.kind) ? options.kind : 'product'
 		this.init()
 	},
 	methods: {
 		init() {
 			if (!this.id) return
+			if (this.kind === 'course') {
+				getPublishedCourseDetail(this.id).then(res => {
+					const msg = res.data || {}
+					const title = `${msg.gradeName || msg.grade_name || ''} ${msg.subjectName || msg.subject_name || ''}`.trim()
+					this.goodsInfo.name = title || `学习课程#${this.id}`
+					const img = msg.teacherImage || msg.teacher_image || ''
+					this.goodsInfo.image = img ? (String(img).startsWith('http') ? img : (baseUrl + img)) : ''
+					this.goodsInfo.price = msg.hourlyRate || msg.hourly_rate || 0
+					this.goodsInfo.description = `老师：${msg.teacherName || msg.teacher_name || '-'}`
+				})
+				return
+			}
 			getOneProduct(this.id).then(res => {
 				const msg = res.data
 				if (!msg) return
@@ -95,24 +110,27 @@ export default {
 				uni.showToast({ title: '商品无效', icon: 'none' })
 				return
 			}
-			createAppProductOrder({
-				productId: this.id,
-				quantity: this.count
-			}).then(() => {
-				uni.showToast({
-					title: '支付成功',
-					icon: 'success',
-					duration: 1500,
+			const req = this.kind === 'course'
+				? createAppCourseOrder({ publishId: this.id, quantity: this.count })
+				: createAppProductOrder({ productId: this.id, quantity: this.count })
+				req.then(() => {
+					uni.showToast({
+						title: '支付成功',
+						icon: 'success',
+						duration: 1500,
 					success: () => {
 						setTimeout(() => {
 							uni.switchTab({ url: '/pages/mine/index' })
 						}, 1500)
 					}
 				})
-			}).catch(() => {})
+				}).catch((err) => {
+					const msg = (err && err.msg) ? err.msg : '支付失败，请稍后重试'
+					uni.showToast({ title: msg, icon: 'none' })
+				})
+			}
 		}
 	}
-}
 </script>
 
 <style>

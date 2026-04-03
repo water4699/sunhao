@@ -75,7 +75,8 @@
 			init() {
 				getOneTeacher(this.id).then(res => {
 					var msg = res.data;
-					this.avatar = baseUrl + msg.image;
+					const img = msg.image || ''
+					this.avatar = String(img).startsWith('http') ? img : (baseUrl + img)
 					this.teacherName = msg.realName;
 					this.gender = msg.gender;
 					this.education =msg.education;

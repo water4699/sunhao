@@ -150,6 +150,7 @@
 	import {
 		teacherJoin
 	} from '@/api/teacherJoin/teacherJoin'
+	import { getTeacherJoinStatus } from '@/api/teacherJoin/teacherJoin'
 	import {
 		getToken
 	} from '@/utils/auth'
@@ -206,13 +207,28 @@
 				selectedArea: '',
 				selectedGrade: '',
 				selectedSubject: '',
-				selectedEducation: ''
+				selectedEducation: '',
+				teacherJoinInfo: {
+					hasSubmitted: false,
+					approved: false,
+					status: -1
+				},
+				approvedTipShown: false
 			}
 		},
 		mounted() {
 			this.loadDicts()
 		},
+		onShow() {
+			this.checkRoleAndStatus()
+		},
 		computed: {
+			roles() {
+				return (this.$store && this.$store.getters && this.$store.getters.roles) || []
+			},
+			isTeacher() {
+				return this.roles.includes('teacher')
+			},
 			areaOptions() {
 				return this.areaRows.map(item => item.name)
 			},
@@ -224,6 +240,43 @@
 			}
 		},
 		methods: {
+			async checkRoleAndStatus() {
+				if (!getToken()) {
+					uni.navigateTo({ url: '/pages/login' })
+					return
+				}
+				if (!this.isTeacher) {
+					uni.showToast({ title: '仅老师账号可申请入驻', icon: 'none' })
+					setTimeout(() => {
+						uni.switchTab({ url: '/pages/index/index' })
+					}, 800)
+					return
+				}
+				try {
+					const res = await getTeacherJoinStatus()
+					const d = res.data || {}
+					this.teacherJoinInfo = {
+						hasSubmitted: !!d.hasSubmitted,
+						approved: !!d.approved,
+						status: Number(d.status)
+					}
+					if (this.teacherJoinInfo.approved) {
+						if (!this.approvedTipShown) {
+							this.approvedTipShown = true
+							uni.showModal({
+								title: '已入驻成功',
+								content: '您的老师入驻已审核通过，可以直接去上架课程。',
+								confirmText: '去发布',
+								success: (r) => {
+									if (r.confirm) {
+										uni.navigateTo({ url: '/pages/coursePublish/coursePublish' })
+									}
+								}
+							})
+						}
+					}
+				} catch (e) {}
+			},
 			async loadDicts() {
 				try {
 					const [ar, gr, sr] = await Promise.all([
@@ -337,6 +390,13 @@
 
 			// 表单提交方法
 			handleSubmit() {
+				if (this.teacherJoinInfo.hasSubmitted) {
+					uni.showToast({
+						title: '您已提交过入驻申请，请等待管理员审核',
+						icon: 'none'
+					})
+					return
+				}
 				// 表单验证
 				const requiredFields = [{
 						field: 'realName',
@@ -415,13 +475,13 @@
 					if (res.code === 200) {
 						uni.showModal({
 							title: '提交成功',
-							content: '您的入驻信息已提交，管理员审核通过前不会在「找老师」中展示。您可在「找老师」中关注列表更新。',
+							content: '入驻申请已提交至管理端通知管理，需管理员审核通过后方可入驻成功。',
 							showCancel: false,
 							success: () => {
 								this.resetForm();
 								uni.switchTab({
-									url: '/pages/findteacher/findteacher/findteacher'
-								});
+									url: '/pages/index/index'
+								})
 							}
 						});
 					} else {
@@ -431,10 +491,21 @@
 							duration: 3000
 						});
 					}
-				}).catch(error => {
+					}).catch(error => {
 					uni.hideLoading();
+					let msg = '提交失败，请稍后重试'
+					if (typeof error === 'string') {
+						if (error === '500' || error === '403' || error === '401') {
+							// 具体后端提示已由 request.js 弹出，这里避免出现 undefined
+							msg = '提交失败，请检查提示后重试'
+						} else if (error.trim()) {
+							msg = error
+						}
+					} else if (error && (error.message || error.errMsg)) {
+						msg = error.message || error.errMsg
+					}
 					uni.showToast({
-						title: '提交失败: ' + (error.message || error.errMsg),
+						title: msg,
 						icon: 'none',
 						duration: 3000
 					});

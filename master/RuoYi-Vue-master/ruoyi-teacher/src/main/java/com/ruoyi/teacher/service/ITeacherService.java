@@ -59,4 +59,6 @@ public interface ITeacherService
     String selectSubjectBySubjectId(Integer subjectid);
 
     int countTeacherByUserId(String userId);
+
+    Teacher selectTeacherByUserId(String userId);
 }

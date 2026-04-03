@@ -17,3 +17,12 @@ export function createAppProductOrder(data) {
     data
   })
 }
+
+/** 小程序：创建学习课程订单（模拟支付） */
+export function createAppCourseOrder(data) {
+  return request({
+    url: '/system/order/app/course',
+    method: 'post',
+    data
+  })
+}

@@ -62,4 +62,10 @@ public interface OrderMapper
      * 小程序：当前用户订单列表，左联商品名称
      */
     List<OrderAppVo> selectAppOrderListByUserId(@Param("userId") String userId);
+
+    int countPublishedCourseById(@Param("publishId") String publishId);
+
+    Long selectPublishedCourseStatusById(@Param("publishId") String publishId);
+
+    java.math.BigDecimal selectPublishedCoursePriceById(@Param("publishId") String publishId);
 }

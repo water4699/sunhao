@@ -9,6 +9,10 @@
         :class="['main-tab', topTab === 1 ? 'active' : '']"
         @click="switchTop(1)"
       >商品订单</view>
+      <view
+        :class="['main-tab', topTab === 2 ? 'active' : '']"
+        @click="switchTop(2)"
+      >学习课程</view>
     </view>
 
     <!-- 课程预约 -->
@@ -66,8 +70,8 @@
     </view>
 
     <!-- 商品订单 -->
-    <view v-else class="sub-page">
-      <view v-if="productOrderList.length === 0 && productLoaded" class="empty-state">
+    <view v-else-if="topTab === 1" class="sub-page">
+      <view v-if="physicalOrderList.length === 0 && productLoaded" class="empty-state">
         <text class="empty-text">暂无商品订单</text>
         <text class="empty-hint">在「进步商品」购买后将显示在此</text>
       </view>
@@ -79,7 +83,7 @@
         :refresher-enabled="true"
         :refresher-triggered="isRefreshingProduct"
       >
-        <view class="order-item" v-for="po in productOrderList" :key="po.id">
+        <view class="order-item" v-for="po in physicalOrderList" :key="po.id">
           <view class="order-header">
             <view class="order-number">订单号：{{ po.orderNumber }}</view>
             <view class="order-status paid">已支付</view>
@@ -92,6 +96,38 @@
             <view class="order-price">
               <text class="price-label">￥</text>
               <text class="price-value">{{ po.price }}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+    <!-- 学习课程订单 -->
+    <view v-else class="sub-page">
+      <view v-if="learningOrderList.length === 0 && productLoaded" class="empty-state">
+        <text class="empty-text">暂无学习课程订单</text>
+        <text class="empty-hint">在热门课程或进步商品中购买课程后将显示在此</text>
+      </view>
+      <scroll-view
+        v-else
+        class="order-list"
+        scroll-y
+        @refresherrefresh="onRefreshProduct"
+        :refresher-enabled="true"
+        :refresher-triggered="isRefreshingProduct"
+      >
+        <view class="order-item" v-for="co in learningOrderList" :key="co.id">
+          <view class="order-header">
+            <view class="order-number">订单号：{{ co.orderNumber }}</view>
+            <view class="order-status paid">已支付</view>
+          </view>
+          <view class="order-content">
+            <view class="order-info">
+              <view class="teacher-name">{{ co.title }}</view>
+              <view class="order-time">{{ co.orderTime }}</view>
+            </view>
+            <view class="order-price">
+              <text class="price-label">￥</text>
+              <text class="price-value">{{ co.price }}</text>
             </view>
           </view>
         </view>
@@ -121,12 +157,14 @@ export default {
       ],
       orderList: [],
       productOrderList: [],
+      physicalOrderList: [],
+      learningOrderList: [],
       pageSize: 50
     }
   },
   computed: {
     ...mapState({
-      userId: 'id'
+      userId: state => state.user.id
     }),
     filteredOrderList() {
       if (this.currentStatusId === 0) {
@@ -147,7 +185,7 @@ export default {
   onShow() {
     if (this.userId) {
       this.fetchCourses()
-      if (this.topTab === 1) {
+      if (this.topTab === 1 || this.topTab === 2) {
         this.fetchProductOrders()
       }
     }
@@ -158,7 +196,7 @@ export default {
         this.isLoaded = false
         this.productLoaded = false
         this.fetchCourses()
-        if (this.topTab === 1) {
+        if (this.topTab === 1 || this.topTab === 2) {
           this.fetchProductOrders()
         }
       }
@@ -167,7 +205,7 @@ export default {
   methods: {
     switchTop(tab) {
       this.topTab = tab
-      if (tab === 1) {
+      if (tab === 1 || tab === 2) {
         this.fetchProductOrders()
       }
     },
@@ -223,6 +261,8 @@ export default {
     fetchProductOrders() {
       if (!this.userId) {
         this.productOrderList = []
+        this.physicalOrderList = []
+        this.learningOrderList = []
         this.productLoaded = true
         return
       }
@@ -234,14 +274,30 @@ export default {
         this.productOrderList = rows.map(r => ({
           id: r.orderId,
           orderNumber: String(r.orderId),
-          title: r.productName ? r.productName : '商品 ID：' + (r.courseId || '-'),
+          title: r.productName
+            ? r.productName
+            : (r.courseName ? `学习课程：${r.courseName}` : '商品 ID：' + (r.courseId || '-')),
           orderTime: r.createdAt || '',
-          price: r.finalAmount != null ? r.finalAmount : r.amount
+          price: r.finalAmount != null ? r.finalAmount : r.amount,
+          itemType: this.resolveOrderType(r)
         }))
+        this.physicalOrderList = this.productOrderList.filter(x => x.itemType === 'product')
+        this.learningOrderList = this.productOrderList.filter(x => x.itemType === 'course')
         this.productLoaded = true
       }).catch(() => {
+        this.productOrderList = []
+        this.physicalOrderList = []
+        this.learningOrderList = []
         this.productLoaded = true
       })
+    },
+    resolveOrderType(r) {
+      if (r && r.itemType === 'course') return 'course'
+      if (r && r.itemType === 'product') return 'product'
+      const tx = String((r && r.transactionId) || '')
+      if (tx.indexOf('COURSE-') === 0) return 'course'
+      if (r && r.courseName) return 'course'
+      return 'product'
     },
     handleTabChange(statusId) {
       this.currentStatusId = statusId

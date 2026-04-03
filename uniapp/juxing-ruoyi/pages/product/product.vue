@@ -20,6 +20,12 @@
                        mode="aspectFill"></image>
                 <text class="category-title">文具</text>
             </view>
+            <view class="category-card" :class="{ 'active': activeCategory === '学习课程' }" @click="handleCategoryClick('学习课程')">
+                <image class="category-image"
+                       src="https://ai-public.mastergo.com/ai/img_res/e4f9c701113f7cb14672be2c13df1701.jpg"
+                       mode="aspectFill"></image>
+                <text class="category-title">学习课程</text>
+            </view>
         </view>
 
         <!-- 推荐商品区域 -->
@@ -54,42 +60,83 @@
 
 <script>
     import { findAllProduct } from '@/api/Product/findAllProduct'
+    import { listPublishedCourses } from '@/api/course/course'
     import { baseUrl } from '../../config';
     
     export default {
         data() {
             return {
                 activeCategory: 'all',
-                productList: []
+                productList: [],
+                learningCourseList: []
             }
         },
         computed: {
             filteredProductList() {
+                const merged = [...this.productList, ...this.learningCourseList]
                 if (this.activeCategory === 'all') {
-                    return this.productList;
+                    return merged;
                 }
-                return this.productList.filter(item => item.type === this.activeCategory);
+                return merged.filter(item => item.type === this.activeCategory);
             }
         },
 
         mounted() {
             this.init();
         },
-        methods: {
-            init() {
-                findAllProduct().then(res => {
-                    // 确保数据中有 type 字段
-                    this.productList = res.rows.map(item => {
-                        return {
-                            ...item,
-                            // 如果后端没有返回 type，设置默认值
-                            type: item.type || '书籍'
-                        }
-                    });
-                })
-            },
+        onShow() {
+            this.handleCourseDeepLink()
+        },
+	        methods: {
+	            async init() {
+	                const [pr, cr] = await Promise.allSettled([
+	                    findAllProduct(),
+	                    listPublishedCourses({ pageNum: 1, pageSize: 100, status: 0 })
+	                ])
+	                if (pr.status === 'fulfilled') {
+	                    const rows = (pr.value && pr.value.rows) || []
+	                    this.productList = rows.map(item => ({
+	                        ...item,
+	                        type: item.type || '书籍',
+	                        __kind: 'product'
+	                    }))
+	                } else {
+	                    this.productList = []
+	                    uni.showToast({ title: '商品加载失败', icon: 'none' })
+	                }
+	                if (cr.status === 'fulfilled') {
+	                    const r = cr.value
+	                    const rows = (r && r.rows) || (r && r.data && r.data.rows) || []
+	                    this.learningCourseList = rows.map((row) => ({
+	                        productId: row.publishId || row.publish_id,
+	                        image: row.teacherImage || row.teacher_image || '',
+	                        name: `${row.gradeName || row.grade_name || ''} ${row.subjectName || row.subject_name || ''}`.trim() || `课程#${row.publishId || row.publish_id}`,
+	                        price: row.hourlyRate || row.hourly_rate || 0,
+	                        type: '学习课程',
+	                        description: row.address || '',
+	                        __kind: 'course'
+	                    }))
+	                } else {
+	                    this.learningCourseList = []
+	                }
+	            },
             getImage(url) {
-                return baseUrl + url;
+                if (!url) return '/static/image/1.png'
+                return String(url).startsWith('http') ? url : (baseUrl + url);
+            },
+            handleCourseDeepLink() {
+                let cid = ''
+                try {
+                    cid = uni.getStorageSync('selected_learning_course_id') || ''
+                } catch (e) {}
+                if (!cid) return
+                try {
+                    uni.removeStorageSync('selected_learning_course_id')
+                } catch (e) {}
+                this.activeCategory = '学习课程'
+                uni.navigateTo({
+                    url: `/pages/product/productDetail/product_det?id=${cid}&kind=course`
+                })
             },
             handleCategoryClick(category) {
                 this.activeCategory = category;
@@ -101,14 +148,16 @@
                     uni.showToast({ title: '商品信息异常', icon: 'none' })
                     return
                 }
+                const kind = item.__kind === 'course' ? 'course' : 'product'
                 uni.navigateTo({
-                    url: `/pages/product/productDetail/order/order?id=${id}`
+                    url: `/pages/product/productDetail/order/order?id=${id}&kind=${kind}`
                 })
             },
             findProductDetail(input){
-                console.log(input);
+                const row = this.filteredProductList.find(x => String(x.productId) === String(input))
+                const kind = row && row.__kind === 'course' ? 'course' : 'product'
                 uni.navigateTo({
-                    url: `/pages/product/productDetail/product_det?id=${input}`
+                    url: `/pages/product/productDetail/product_det?id=${input}&kind=${kind}`
                 });
             }
         }
@@ -150,34 +199,36 @@ page {
 }
 
 .category-section {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 30rpx;
     gap: 20rpx;
 }
 
 .category-card {
-    flex: 1;
     display: flex;
-	width: 30%;
     flex-direction: column;
     align-items: center;
-    padding: 30rpx;
+    justify-content: center;
+    min-height: 220rpx;
+    padding: 20rpx;
     background-color: #fff;
     border-radius: 16rpx;
     box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .category-image {
-    width: 200rpx;
-    height: 200rpx;
+    width: 120rpx;
+    height: 120rpx;
     border-radius: 12rpx;
 }
 
 .category-title {
-    margin-top: 20rpx;
+    margin-top: 14rpx;
     font-size: 16px;
     font-weight: bold;
     color: #333333;
+    text-align: center;
 }
 
 .category-desc {

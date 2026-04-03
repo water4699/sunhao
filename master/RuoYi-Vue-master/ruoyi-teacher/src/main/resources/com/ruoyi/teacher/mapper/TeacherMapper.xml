@@ -120,4 +120,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="countTeacherByUserId" resultType="int">
         select count(*) from teacher where user_id = #{userId}
     </select>
+
+    <select id="selectTeacherByUserId" resultMap="TeacherResult">
+        <include refid="selectTeacherVo"/>
+        where user_id = #{userId}
+        order by
+        case
+            when status = 1 then 3
+            when status = 0 then 2
+            when status = 2 then 1
+            else 0
+        end desc,
+        creat_time desc,
+        teacher_id desc
+        limit 1
+    </select>
 </mapper>

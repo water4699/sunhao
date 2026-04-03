@@ -198,7 +198,7 @@
 						icon: 'success'
 					})
 					setTimeout(() => {
-						uni.switchTab({
+						uni.navigateTo({
 							url: '/pages/mine/order/order'
 						})
 					}, 1200)

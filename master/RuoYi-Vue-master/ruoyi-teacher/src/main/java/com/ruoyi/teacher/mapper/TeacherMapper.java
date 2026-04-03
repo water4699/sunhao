@@ -60,4 +60,6 @@ public interface TeacherMapper
     String selectSubjectBySubjectId(Integer subjectid);
 
     int countTeacherByUserId(@Param("userId") String userId);
+
+    Teacher selectTeacherByUserId(@Param("userId") String userId);
 }

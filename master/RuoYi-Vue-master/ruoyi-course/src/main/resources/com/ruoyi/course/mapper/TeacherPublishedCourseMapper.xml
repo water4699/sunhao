@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.course.mapper.TeacherPublishedCourseMapper">
+    <resultMap id="TeacherPublishedCourseResult" type="TeacherPublishedCourse">
+        <result property="publishId" column="publish_id"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="subjectId" column="subject_id"/>
+        <result property="gradeId" column="grade_id"/>
+        <result property="status" column="status"/>
+        <result property="startDate" column="start_date"/>
+        <result property="address" column="address"/>
+        <result property="expectedHours" column="expected_hours"/>
+        <result property="hourlyRate" column="hourly_rate"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="teacherImage" column="teacher_image"/>
+        <result property="subjectName" column="subject_name"/>
+        <result property="gradeName" column="grade_name"/>
+    </resultMap>
+
+    <sql id="selectTeacherPublishedCourseVo">
+        select tpc.publish_id, tpc.teacher_id, tpc.subject_id, tpc.grade_id, tpc.status, tpc.start_date,
+               tpc.address, tpc.expected_hours, tpc.hourly_rate, tpc.created_at,
+               t.real_name as teacher_name, t.image as teacher_image, s.name as subject_name, g.name as grade_name
+        from teacher_published_course tpc
+        left join teacher t on t.teacher_id = tpc.teacher_id
+        left join subject s on s.subject_id = tpc.subject_id
+        left join grade_level g on g.grade_id = tpc.grade_id
+    </sql>
+
+    <select id="selectTeacherPublishedCourseById" parameterType="String" resultMap="TeacherPublishedCourseResult">
+        <include refid="selectTeacherPublishedCourseVo"/>
+        where tpc.publish_id = #{publishId}
+    </select>
+
+    <select id="selectTeacherPublishedCourseList" parameterType="TeacherPublishedCourse" resultMap="TeacherPublishedCourseResult">
+        <include refid="selectTeacherPublishedCourseVo"/>
+        <where>
+            <if test="teacherId != null and teacherId != ''">and tpc.teacher_id = #{teacherId}</if>
+            <if test="subjectId != null and subjectId != ''">and tpc.subject_id = #{subjectId}</if>
+            <if test="gradeId != null and gradeId != ''">and tpc.grade_id = #{gradeId}</if>
+            <if test="status != null">and tpc.status = #{status}</if>
+            <if test="address != null and address != ''">and tpc.address like concat('%', #{address}, '%')</if>
+            <if test="startDate != null">and tpc.start_date = #{startDate}</if>
+        </where>
+        order by tpc.created_at desc, tpc.publish_id desc
+    </select>
+
+    <insert id="insertTeacherPublishedCourse" parameterType="TeacherPublishedCourse" useGeneratedKeys="true" keyProperty="publishId">
+        insert into teacher_published_course
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="teacherId != null and teacherId != ''">teacher_id,</if>
+            <if test="subjectId != null and subjectId != ''">subject_id,</if>
+            <if test="gradeId != null and gradeId != ''">grade_id,</if>
+            <if test="status != null">status,</if>
+            <if test="startDate != null">start_date,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="expectedHours != null and expectedHours != ''">expected_hours,</if>
+            <if test="hourlyRate != null">hourly_rate,</if>
+            <if test="createdAt != null">created_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="teacherId != null and teacherId != ''">#{teacherId},</if>
+            <if test="subjectId != null and subjectId != ''">#{subjectId},</if>
+            <if test="gradeId != null and gradeId != ''">#{gradeId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="expectedHours != null and expectedHours != ''">#{expectedHours},</if>
+            <if test="hourlyRate != null">#{hourlyRate},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+        </trim>
+    </insert>
+</mapper>

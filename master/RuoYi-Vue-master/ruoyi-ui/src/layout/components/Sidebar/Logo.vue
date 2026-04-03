@@ -35,7 +35,7 @@ export default {
   },
   data() {
     return {
-      title: "聚星家教管理系统",
+      title: "聚星教育管理系统",
       logo: logoImg
     }
   }
