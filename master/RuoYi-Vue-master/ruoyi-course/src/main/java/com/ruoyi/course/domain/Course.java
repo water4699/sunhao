@@ -63,6 +63,15 @@ public class Course extends BaseEntity
     @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
     private Date createdAt;
 
+    /** 学员姓名（APP教师端展示） */
+    private String studentName;
+
+    /** 学员联系方式（APP教师端展示） */
+    private String studentPhone;
+
+    /** 教师姓名（APP学生端展示） */
+    private String teacherName;
+
     public void setCourseId(String courseId) 
     {
         this.courseId = courseId;
@@ -183,6 +192,36 @@ public class Course extends BaseEntity
         return createdAt;
     }
 
+    public String getStudentName()
+    {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName)
+    {
+        this.studentName = studentName;
+    }
+
+    public String getStudentPhone()
+    {
+        return studentPhone;
+    }
+
+    public void setStudentPhone(String studentPhone)
+    {
+        this.studentPhone = studentPhone;
+    }
+
+    public String getTeacherName()
+    {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName)
+    {
+        this.teacherName = teacherName;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
@@ -198,6 +237,9 @@ public class Course extends BaseEntity
             .append("completedHours", getCompletedHours())
             .append("hourlyRate", getHourlyRate())
             .append("createdAt", getCreatedAt())
+            .append("studentName", getStudentName())
+            .append("studentPhone", getStudentPhone())
+            .append("teacherName", getTeacherName())
             .toString();
     }
 }

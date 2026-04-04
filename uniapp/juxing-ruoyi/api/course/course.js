@@ -47,3 +47,22 @@ export function getPublishedCourseDetail(publishId) {
     method: 'get'
   })
 }
+
+
+/** 老师端：预约请求列表 */
+export function listTeacherBookings(query) {
+  return request({
+    url: '/system/course/app/teacher/booking/list',
+    method: 'get',
+    params: query
+  })
+}
+
+/** 老师端：处理预约（status: 1同意 2拒绝） */
+export function decideTeacherBooking(courseId, status) {
+  return request({
+    url: `/system/course/app/teacher/booking/${courseId}/decision`,
+    method: 'post',
+    data: { status }
+  })
+}

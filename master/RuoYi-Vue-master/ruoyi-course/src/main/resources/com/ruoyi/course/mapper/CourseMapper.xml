@@ -17,6 +17,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="completedHours"    column="completed_hours"    />
         <result property="hourlyRate"    column="hourly_rate"    />
         <result property="createdAt"    column="created_at"    />
+        <result property="studentName"   column="student_name"   />
+        <result property="studentPhone"  column="student_phone"  />
+        <result property="teacherName"   column="teacher_name"   />
     </resultMap>
 
     <sql id="selectCourseVo">
@@ -111,4 +114,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and start_date = #{startDate}
           and (status is null or status &lt;&gt; 2)
     </select>
+
+
+    <select id="selectTeacherBookingAppList" resultMap="CourseResult">
+        select c.course_id, c.student_id, c.teacher_id, c.subject_id, c.grade_id, c.status, c.start_date,
+               c.address, c.expected_hours, c.completed_hours, c.hourly_rate, c.created_at,
+               st.real_name as student_name, u.phone as student_phone, t.real_name as teacher_name
+          from course c
+          left join student st on st.student_id = c.student_id
+          left join users u on u.users_id = st.user_id
+          left join teacher t on t.teacher_id = c.teacher_id
+         where c.teacher_id = #{teacherId}
+           <if test="status != null">
+             and c.status = #{status}
+           </if>
+         order by case when c.status = 0 then 2 when c.status = 1 then 1 else 0 end desc, c.created_at desc, c.course_id desc
+    </select>
+
+    <update id="updateBookingStatusByTeacher">
+        update course
+           set status = #{status}
+         where course_id = #{courseId}
+           and teacher_id = #{teacherId}
+    </update>
+
 </mapper>

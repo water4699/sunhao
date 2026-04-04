@@ -249,4 +249,43 @@ public class CourseServiceImpl implements ICourseService
     {
         return courseMapper.deleteCourseByCourseId(courseId);
     }
+
+
+    @Override
+    public List<Course> selectTeacherBookingAppList(String teacherId, Long status)
+    {
+        if (StringUtils.isEmpty(teacherId))
+        {
+            return java.util.Collections.emptyList();
+        }
+        return courseMapper.selectTeacherBookingAppList(teacherId, status);
+    }
+
+    @Override
+    public int teacherDecideBooking(String teacherId, String courseId, Long status)
+    {
+        if (StringUtils.isEmpty(teacherId) || StringUtils.isEmpty(courseId))
+        {
+            throw new ServiceException("参数不能为空");
+        }
+        if (status == null || (status != 1L && status != 2L))
+        {
+            throw new ServiceException("仅支持同意(1)或拒绝(2)");
+        }
+        Course existing = courseMapper.selectCourseByCourseId(courseId);
+        if (existing == null)
+        {
+            throw new ServiceException("预约记录不存在");
+        }
+        if (!teacherId.equals(existing.getTeacherId()))
+        {
+            throw new ServiceException("无权处理该预约");
+        }
+        if (existing.getStatus() != null && existing.getStatus() != 0L)
+        {
+            throw new ServiceException("该预约已处理，请勿重复操作");
+        }
+        return courseMapper.updateBookingStatusByTeacher(courseId, teacherId, status);
+    }
+
 }

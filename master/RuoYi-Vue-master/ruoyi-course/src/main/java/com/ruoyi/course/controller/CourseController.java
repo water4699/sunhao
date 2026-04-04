@@ -279,6 +279,57 @@ public class CourseController extends BaseController
         return success(row);
     }
 
+
+
+    /**
+     * 小程序老师：查看预约请求（status: 0待处理 1已同意 2已拒绝，不传则全部）
+     */
+    @GetMapping("/app/teacher/booking/list")
+    public TableDataInfo appTeacherBookingList(Long status)
+    {
+        LoginUser lu = SecurityUtils.getLoginUser();
+        if (lu == null || !lu.isBusinessUser())
+        {
+            return getDataTable(Collections.emptyList());
+        }
+        if (!"teacher".equalsIgnoreCase(lu.getBusinessUsersType()))
+        {
+            return getDataTable(Collections.emptyList());
+        }
+        Teacher teacher = teacherService.selectTeacherByUserId(String.valueOf(lu.getUserId()));
+        if (teacher == null || StringUtils.isEmpty(teacher.getTeacherId()))
+        {
+            return getDataTable(Collections.emptyList());
+        }
+        startPage();
+        List<Course> list = courseService.selectTeacherBookingAppList(teacher.getTeacherId(), status);
+        return getDataTable(list);
+    }
+
+    /**
+     * 小程序老师：处理预约（status=1 同意，status=2 拒绝）
+     */
+    @PostMapping("/app/teacher/booking/{courseId}/decision")
+    public AjaxResult appTeacherBookingDecision(@PathVariable("courseId") String courseId, @RequestBody Course body)
+    {
+        LoginUser lu = SecurityUtils.getLoginUser();
+        if (lu == null || !lu.isBusinessUser())
+        {
+            return error("请先登录");
+        }
+        if (!"teacher".equalsIgnoreCase(lu.getBusinessUsersType()))
+        {
+            return error("仅老师可处理预约");
+        }
+        Teacher teacher = teacherService.selectTeacherByUserId(String.valueOf(lu.getUserId()));
+        if (teacher == null || StringUtils.isEmpty(teacher.getTeacherId()))
+        {
+            return error("未找到老师档案");
+        }
+        Long status = body == null ? null : body.getStatus();
+        return toAjax(courseService.teacherDecideBooking(teacher.getTeacherId(), courseId, status));
+    }
+
     /**
      * 修改课程管理
      */

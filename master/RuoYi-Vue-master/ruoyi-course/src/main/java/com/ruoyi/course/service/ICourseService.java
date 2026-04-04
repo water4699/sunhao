@@ -68,4 +68,14 @@ public interface ICourseService
      * @return 结果
      */
     public int deleteCourseByCourseId(String courseId);
+
+    /**
+     * 教师端：预约请求列表
+     */
+    public List<Course> selectTeacherBookingAppList(String teacherId, Long status);
+
+    /**
+     * 教师端：处理预约（1同意/2拒绝）
+     */
+    public int teacherDecideBooking(String teacherId, String courseId, Long status);
 }

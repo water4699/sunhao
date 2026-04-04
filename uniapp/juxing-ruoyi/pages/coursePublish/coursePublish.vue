@@ -97,7 +97,7 @@ export default {
       const roles = (this.$store && this.$store.getters && this.$store.getters.roles) || []
       uni.setTabBarItem({
         index: 1,
-        text: roles.includes('teacher') ? '发布课程' : '找老师'
+        text: roles.includes('teacher') ? '预约管理' : '找老师'
       })
     } catch (e) {}
   },

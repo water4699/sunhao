@@ -254,7 +254,7 @@
 				try {
 					uni.setTabBarItem({
 						index: 1,
-						text: this.isTeacher ? '发布课程' : '找老师'
+						text: this.isTeacher ? '预约管理' : '找老师'
 					})
 				} catch (e) {}
 			},
