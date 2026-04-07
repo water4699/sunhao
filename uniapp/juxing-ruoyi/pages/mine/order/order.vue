@@ -56,6 +56,8 @@
               <view class="teacher-name">{{ order.teacherName }}</view>
               <view class="order-time">{{ order.orderTime }}</view>
               <view v-if="order.address" class="order-addr">{{ order.address }}</view>
+              <view v-if="order.contactPhone" class="order-addr">联系方式：{{ order.contactPhone }}</view>
+              <view v-if="order.contactNote" class="order-addr">留言：{{ order.contactNote }}</view>
             </view>
             <view class="order-price">
               <text class="price-label">￥</text>
@@ -222,16 +224,38 @@ export default {
       return '进行中'
     },
     mapRow(row) {
+      const parsed = this.parseBookingAddress(row.address)
       return {
         id: row.courseId,
         orderNumber: String(row.courseId),
-        teacherName: '教师 ' + (row.teacherId || '-'),
+        teacherName: row.teacherName || ('教师 ' + (row.teacherId || '-')),
         orderTime: row.startDate || '',
         status: this.statusText(row.status),
         courseStatus: Number(row.status),
         price: row.hourlyRate,
-        address: row.address || ''
+        address: this.composeBookingAddress(parsed),
+        contactPhone: parsed.contact,
+        contactNote: parsed.note
       }
+    },
+    parseBookingAddress(raw) {
+      const text = String(raw || '')
+      const lines = text.split('\n')
+      const data = { time: '', address: '', contact: '', note: '' }
+      lines.forEach((line) => {
+        if (line.indexOf('时段：') === 0) data.time = line.slice(3)
+        else if (line.indexOf('地址：') === 0) data.address = line.slice(3)
+        else if (line.indexOf('联系方式：') === 0) data.contact = line.slice(5)
+        else if (line.indexOf('留言：') === 0) data.note = line.slice(3)
+      })
+      if (!data.address && text && lines.length === 1) data.address = text
+      return data
+    },
+    composeBookingAddress(parsed) {
+      const parts = []
+      if (parsed.time) parts.push(`时段：${parsed.time}`)
+      if (parsed.address) parts.push(parsed.address)
+      return parts.join('；')
     },
     updateTabCounts() {
       this.tabs[0].count = this.orderList.length

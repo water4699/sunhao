@@ -61,6 +61,16 @@
         <text class="form-label">上课地址</text>
         <input v-model="address" placeholder="请输入详细地址" class="address-input" />
       </view>
+
+      <view class="form-item">
+        <text class="form-label">联系方式</text>
+        <input v-model="contactPhone" placeholder="请输入手机号或微信号" class="address-input" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">留言</text>
+        <textarea v-model="contactNote" maxlength="120" placeholder="可简单说明需求，方便老师联系" class="remark-input" />
+      </view>
     </view>
 
     <!-- 确认按钮 -->
@@ -78,6 +88,9 @@
 		addCourse
 	} from '@/api/course/course'
 	import {
+		getPublishedCourseDetail
+	} from '@/api/course/course'
+	import {
 		baseUrl
 	} from '../../../../config'
 	import {
@@ -92,18 +105,21 @@
 				teacherName: '',
 				teacherSubjects: '',
 				teacherSubjectId: '',
+				publishId: '',
 				rating: 0,
 				hourlyFee: 0,
 				selectedDate: '',
 				selectedTime: '',
 				address: '',
+				contactPhone: '',
+				contactNote: '',
 				startDate: '',
 				endDate: ''
 			}
 		},
 		computed: {
 			isFormValid() {
-				return !!(this.selectedDate && this.selectedTime && (this.address || '').trim())
+				return !!(this.selectedDate && this.selectedTime && (this.address || '').trim() && (this.contactPhone || '').trim())
 			},
 			fullStars() {
 				return Math.floor(Number(this.rating) || 0)
@@ -126,6 +142,7 @@
 				return
 			}
 			this.id = (options && (options.id || options.teacherId)) || ''
+			this.publishId = (options && options.publishId) || ''
 			const d = new Date()
 			this.startDate = this.fmtDate(d)
 			const end = new Date(d.getTime() + 90 * 86400000)
@@ -147,7 +164,10 @@
 					const t = res.data
 					if (!t) return
 					const img = t.image || ''
-					this.teacherAvatar = img && String(img).startsWith('http') ? img : (baseUrl + img)
+					if (!img) this.teacherAvatar = '/static/image/1.png'
+					else if (String(img).startsWith('http://')) this.teacherAvatar = '/static/image/1.png'
+					else if (String(img).startsWith('http')) this.teacherAvatar = img
+					else this.teacherAvatar = baseUrl + img
 					this.teacherName = t.realName || ''
 					this.teacherSubjects = t.subjectName || ''
 					const sid = t.subjectId
@@ -155,6 +175,15 @@
 					this.rating = Number(t.rating) || 0
 					this.hourlyFee = t.hourlyRate != null ? t.hourlyRate : 0
 				}).catch(() => {})
+				if (this.publishId) {
+					getPublishedCourseDetail(this.publishId).then(res => {
+						const row = res.data || {}
+						if (!row) return
+						if (row.subjectName) this.teacherSubjects = row.subjectName
+						if (row.subjectId != null && row.subjectId !== '') this.teacherSubjectId = String(row.subjectId)
+						if (row.hourlyRate != null) this.hourlyFee = row.hourlyRate
+					}).catch(() => {})
+				}
 			},
 			handleDateChange(e) {
 				this.selectedDate = e.detail.value
@@ -172,15 +201,18 @@
 				}
 				if (!this.isFormValid) {
 					uni.showToast({
-						title: '请选择日期、时段并填写地址',
+						title: '请填写日期、时段、地址和联系方式',
 						icon: 'none'
 					})
 					return
 				}
+				const address = (this.address || '').trim()
+				const contactPhone = (this.contactPhone || '').trim()
+				const contactNote = (this.contactNote || '').trim()
 				const payload = {
 					teacherId: String(this.id),
 					startDate: this.selectedDate,
-					address: `时段：${this.selectedTime}；${this.address.trim()}`,
+					address: `时段：${this.selectedTime}\n地址：${address}\n联系方式：${contactPhone}${contactNote ? `\n留言：${contactNote}` : ''}`,
 					hourlyRate: this.hourlyFee,
 					expectedHours: '1',
 					status: 0
@@ -339,6 +371,18 @@ page {
   height: 90rpx;
   width: 100%;
   padding: 0 30rpx;
+  background-color: #FFF3CD;
+  border-radius: 16rpx;
+  font-size: 18px;
+  border: 1rpx solid #FFEBCD;
+  box-sizing: border-box;
+  color: #333333;
+}
+
+.remark-input {
+  width: 100%;
+  min-height: 180rpx;
+  padding: 24rpx 30rpx;
   background-color: #FFF3CD;
   border-radius: 16rpx;
   font-size: 18px;

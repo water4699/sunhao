@@ -23,29 +23,35 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectCourseVo">
-        select course_id, student_id, teacher_id, subject_id, grade_id, status, start_date, address, expected_hours, completed_hours, hourly_rate, created_at from course
+        select c.course_id, c.student_id, c.teacher_id, c.subject_id, c.grade_id, c.status, c.start_date,
+               c.address, c.expected_hours, c.completed_hours, c.hourly_rate, c.created_at,
+               st.real_name as student_name, u.phone as student_phone, t.real_name as teacher_name
+          from course c
+          left join student st on st.student_id = c.student_id
+          left join users u on u.users_id = st.user_id
+          left join teacher t on t.teacher_id = c.teacher_id
     </sql>
 
     <select id="selectCourseList" parameterType="Course" resultMap="CourseResult">
         <include refid="selectCourseVo"/>
         <where>  
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
-            <if test="teacherId != null  and teacherId != ''"> and teacher_id = #{teacherId}</if>
-            <if test="subjectId != null  and subjectId != ''"> and subject_id = #{subjectId}</if>
-            <if test="gradeId != null  and gradeId != ''"> and grade_id = #{gradeId}</if>
-            <if test="status != null "> and status = #{status}</if>
-            <if test="startDate != null "> and start_date = #{startDate}</if>
-            <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
-            <if test="expectedHours != null  and expectedHours != ''"> and expected_hours = #{expectedHours}</if>
-            <if test="completedHours != null  and completedHours != ''"> and completed_hours = #{completedHours}</if>
-            <if test="hourlyRate != null "> and hourly_rate = #{hourlyRate}</if>
-            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+            <if test="studentId != null  and studentId != ''"> and c.student_id = #{studentId}</if>
+            <if test="teacherId != null  and teacherId != ''"> and c.teacher_id = #{teacherId}</if>
+            <if test="subjectId != null  and subjectId != ''"> and c.subject_id = #{subjectId}</if>
+            <if test="gradeId != null  and gradeId != ''"> and c.grade_id = #{gradeId}</if>
+            <if test="status != null "> and c.status = #{status}</if>
+            <if test="startDate != null "> and c.start_date = #{startDate}</if>
+            <if test="address != null  and address != ''"> and c.address like concat('%', #{address}, '%')</if>
+            <if test="expectedHours != null  and expectedHours != ''"> and c.expected_hours = #{expectedHours}</if>
+            <if test="completedHours != null  and completedHours != ''"> and c.completed_hours = #{completedHours}</if>
+            <if test="hourlyRate != null "> and c.hourly_rate = #{hourlyRate}</if>
+            <if test="createdAt != null "> and c.created_at = #{createdAt}</if>
         </where>
     </select>
     
     <select id="selectCourseByCourseId" parameterType="String" resultMap="CourseResult">
         <include refid="selectCourseVo"/>
-        where course_id = #{courseId}
+        where c.course_id = #{courseId}
     </select>
 
     <insert id="insertCourse" parameterType="Course" useGeneratedKeys="true" keyProperty="courseId">

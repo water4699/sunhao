@@ -1,6 +1,6 @@
 <template>
   <view class="page">
-    <view class="tip">登录后可使用智能助手：可接大模型（服务端配置密钥），未配置时自动按条件推荐已审核教师。</view>
+    <view class="tip">登录后可使用智能助手：服务端已预留 DeepSeek 接口，点击「获取建议」可返回选老师建议和匹配教师信息；未配置密钥时会自动按条件回退推荐。</view>
 
     <view class="form-card">
       <view class="row">

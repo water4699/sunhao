@@ -3,7 +3,7 @@ package com.ruoyi.ai.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * 大模型调用配置（密钥请用环境变量 RUOYI_AI_API_KEY，勿提交仓库）
+ * 大模型调用配置（默认按 DeepSeek OpenAI 兼容接口；密钥请用环境变量 RUOYI_AI_API_KEY，勿提交仓库）
  */
 @ConfigurationProperties(prefix = "ruoyi.ai")
 public class RuoyiAiProperties
@@ -11,11 +11,11 @@ public class RuoyiAiProperties
     /** 是否尝试调用外部大模型 */
     private boolean enabled = true;
 
-    private String apiUrl = "https://api.openai.com/v1/chat/completions";
+    private String apiUrl = "https://api.deepseek.com/chat/completions";
 
     private String apiKey = "";
 
-    private String model = "gpt-4o-mini";
+    private String model = "deepseek-chat";
 
     private int connectTimeoutMs = 8000;
 

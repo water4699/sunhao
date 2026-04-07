@@ -87,7 +87,7 @@
 							<text class="course-teacher">{{ course.teacher }}</text>
 						</view>
 					</view>
-					<view v-if="!hotCourses.length" class="empty-hot">暂无已上架课程</view>
+					<view v-if="!hotCourses.length" class="empty-hot">暂无老师发布的家教信息</view>
 				</view>
 			</scroll-view>
 		</view>
@@ -225,10 +225,10 @@
 				return this.roles.includes('teacher')
 			},
 			mainEntryTitle() {
-				return this.isTeacher ? '上架课程' : '找老师'
+				return this.isTeacher ? '发布家教信息' : '找老师'
 			},
 			mainEntryDesc() {
-				return this.isTeacher ? '发布课程/等待家长预约' : '按科目地区快速找老师'
+				return this.isTeacher ? '发布可接单信息，让学生主动找到你' : '按科目地区快速找老师'
 			},
 			secondEntryTitle() {
 				return this.isTeacher ? '老师入驻' : '学习进步'
@@ -260,6 +260,7 @@
 			},
 			getImage(url) {
 				if (!url) return '/static/image/1.png'
+				if (String(url).startsWith('http://')) return '/static/image/1.png'
 				if (String(url).startsWith('http')) return url
 				return baseUrl + url
 			},

@@ -159,7 +159,7 @@ public class ReviewServiceImpl implements IReviewService {
         row.setBookingId(review.getBookingId());
         row.setRating(String.valueOf(score));
         row.setComment(StringUtils.isEmpty(review.getComment()) ? "" : review.getComment().trim());
-        row.setStatus("0");
+        row.setStatus("1");
         row.setCreatedAt(new Date());
         return reviewMapper.insertReview(row);
     }

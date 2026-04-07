@@ -5,12 +5,12 @@
       <text class="back-text">返回</text>
     </view>
     <view class="card">
-      <view class="title">上架课程</view>
+      <view class="title">发布家教信息</view>
 
       <view class="form-item">
-        <text class="label">开课日期</text>
+        <text class="label">可开始授课日期</text>
         <picker mode="date" :start="startDate" :end="endDate" @change="onDateChange">
-          <view class="picker">{{ form.startDate || '请选择开课日期' }}</view>
+          <view class="picker">{{ form.startDate || '请选择可授课日期' }}</view>
         </picker>
       </view>
 
@@ -39,11 +39,11 @@
       </view>
 
       <view class="form-item">
-        <text class="label">课程说明/上课地址</text>
-        <textarea v-model="form.address" class="textarea" maxlength="200" placeholder="请输入课程简介或授课地址"></textarea>
+        <text class="label">家教说明/授课地址</text>
+        <textarea v-model="form.address" class="textarea" maxlength="200" placeholder="请输入擅长方向、授课方式或地址说明"></textarea>
       </view>
 
-      <button class="submit" @click="submit">发布课程</button>
+      <button class="submit" @click="submit">发布家教信息</button>
     </view>
   </view>
 </template>
@@ -128,7 +128,7 @@ export default {
     async checkTeacherApproved() {
       const roles = (this.$store && this.$store.getters && this.$store.getters.roles) || []
       if (!roles.includes('teacher')) {
-        uni.showToast({ title: '仅老师账号可发布课程', icon: 'none' })
+        uni.showToast({ title: '仅老师账号可发布家教信息', icon: 'none' })
         setTimeout(() => uni.switchTab({ url: '/pages/index/index' }), 600)
         return false
       }
@@ -138,7 +138,7 @@ export default {
         if (!d.approved) {
           uni.showModal({
             title: '暂不可发布',
-            content: '请先完成老师入驻并等待管理员审核通过。',
+        content: '请先完成老师入驻并等待管理员审核通过。',
             showCancel: false,
             success: () => uni.navigateTo({ url: '/pages/teacherJoin/teacherJoin' })
           })
@@ -174,7 +174,7 @@ export default {
     },
     submit() {
       if (!this.form.startDate) {
-        uni.showToast({ title: '请选择开课日期', icon: 'none' })
+        uni.showToast({ title: '请选择可授课日期', icon: 'none' })
         return
       }
       if (!this.form.hourlyRate) {
@@ -182,7 +182,7 @@ export default {
         return
       }
       if (!this.form.address) {
-        uni.showToast({ title: '请输入课程说明或地址', icon: 'none' })
+        uni.showToast({ title: '请输入家教说明或地址', icon: 'none' })
         return
       }
       uni.showLoading({ title: '发布中...' })
@@ -191,7 +191,7 @@ export default {
         if (res.code === 200) {
           uni.showModal({
             title: '发布成功',
-            content: '课程已上架成功。',
+            content: '家教信息已发布成功。',
             showCancel: false,
             success: () => uni.switchTab({ url: '/pages/index/index' })
           })

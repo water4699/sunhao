@@ -60,8 +60,8 @@ public class AiTutorServiceImpl implements IAiTutorService
             if (StringUtils.isNotEmpty(aiText))
             {
                 res.setUsedAi(true);
-                res.setSource("llm");
-                res.setReply(aiText.trim() + "\n\n（以下为系统同步推荐的认证教师，供您快速查看）");
+                res.setSource(resolveAiSource());
+                res.setReply(aiText.trim() + "\n\n（以下为平台内符合条件的教师，您可直接查看详情并预约）");
                 return res;
             }
         }
@@ -116,7 +116,8 @@ public class AiTutorServiceImpl implements IAiTutorService
         }
         else
         {
-            sb.append(" 共 ").append(teachers.size()).append(" 位：");
+            sb.append(" 共 ").append(teachers.size()).append(" 位。建议优先看老师的授课经历、学校背景、评分和时薪是否与当前学习目标匹配。");
+            sb.append(" 当前可优先关注：");
             int n = Math.min(3, teachers.size());
             for (int i = 0; i < n; i++)
             {
@@ -134,21 +135,23 @@ public class AiTutorServiceImpl implements IAiTutorService
 
     private String callChatCompletions(AiAssistantRequest request)
     {
+        List<Teacher> teachers = selectRecommendedTeachers(request);
         String userMsg = StringUtils.isNotEmpty(request.getMessage()) ? request.getMessage() : "请根据我的筛选条件给出家教选择建议。";
-        String ctx = String.format("科目ID=%s，地区ID=%s，年级ID=%s。请用简短中文（200字内）给家长一些选课/选老师建议，语气友好。不要编造不存在的教师姓名。",
+        String ctx = String.format("科目ID=%s，地区ID=%s，年级ID=%s。",
             request.getSubjectId() != null ? request.getSubjectId() : "不限",
             StringUtils.isNotEmpty(request.getAreaId()) ? request.getAreaId() : "不限",
             StringUtils.isNotEmpty(request.getGradeId()) ? request.getGradeId() : "不限");
+        String teacherCtx = buildTeacherContext(teachers);
 
         JSONObject body = new JSONObject();
         body.put("model", aiProperties.getModel());
         JSONArray messages = new JSONArray();
         JSONObject sys = new JSONObject();
         sys.put("role", "system");
-        sys.put("content", "你是「聚星教育」家教平台的中文助理，只回答与选课、学习方法、如何选老师相关的问题。");
+        sys.put("content", "你是「聚星教育」家教平台的中文助理。你必须基于平台提供的候选教师信息给出选课和选老师建议，不能编造平台里不存在的老师。输出使用简洁中文，控制在220字内，优先包含：1. 学习问题判断；2. 选老师标准；3. 若有候选教师，点名1到3位并说明匹配原因。");
         JSONObject usr = new JSONObject();
         usr.put("role", "user");
-        usr.put("content", ctx + "\n用户说：" + userMsg);
+        usr.put("content", ctx + "\n平台候选教师：\n" + teacherCtx + "\n用户说：" + userMsg);
         messages.add(sys);
         messages.add(usr);
         body.put("messages", messages);
@@ -172,5 +175,41 @@ public class AiTutorServiceImpl implements IAiTutorService
         }
         JSONObject msg = choices.getJSONObject(0).getJSONObject("message");
         return msg != null ? msg.getString("content") : null;
+    }
+
+    private String buildTeacherContext(List<Teacher> teachers)
+    {
+        if (teachers == null || teachers.isEmpty())
+        {
+            return "暂无符合条件的候选教师。";
+        }
+        StringBuilder sb = new StringBuilder();
+        int n = Math.min(5, teachers.size());
+        for (int i = 0; i < n; i++)
+        {
+            Teacher t = teachers.get(i);
+            sb.append(i + 1).append(". ")
+                .append(StringUtils.isNotEmpty(t.getRealName()) ? t.getRealName() : "教师")
+                .append("，学校=").append(StringUtils.isNotEmpty(t.getUniversity()) ? t.getUniversity() : "未填写")
+                .append("，学历=").append(StringUtils.isNotEmpty(t.getEducation()) ? t.getEducation() : "未填写")
+                .append("，时薪=").append(t.getHourlyRate() != null ? t.getHourlyRate() : "未填写")
+                .append("，评分=").append(t.getRating() != null ? t.getRating() : "未填写")
+                .append("。");
+            if (i < n - 1)
+            {
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String resolveAiSource()
+    {
+        String apiUrl = aiProperties.getApiUrl();
+        if (StringUtils.isNotEmpty(apiUrl) && apiUrl.toLowerCase().contains("deepseek"))
+        {
+            return "deepseek";
+        }
+        return "llm";
     }
 }

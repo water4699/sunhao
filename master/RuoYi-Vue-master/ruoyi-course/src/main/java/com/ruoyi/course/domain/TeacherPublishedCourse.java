@@ -12,6 +12,7 @@ public class TeacherPublishedCourse
     private String teacherId;
     private String subjectId;
     private String gradeId;
+    private String areaId;
     private Long status;
     private Date startDate;
     private String address;
@@ -22,6 +23,8 @@ public class TeacherPublishedCourse
     private String teacherImage;
     private String subjectName;
     private String gradeName;
+    private String education;
+    private String university;
 
     public String getPublishId()
     {
@@ -61,6 +64,16 @@ public class TeacherPublishedCourse
     public void setGradeId(String gradeId)
     {
         this.gradeId = gradeId;
+    }
+
+    public String getAreaId()
+    {
+        return areaId;
+    }
+
+    public void setAreaId(String areaId)
+    {
+        this.areaId = areaId;
     }
 
     public Long getStatus()
@@ -161,5 +174,25 @@ public class TeacherPublishedCourse
     public void setGradeName(String gradeName)
     {
         this.gradeName = gradeName;
+    }
+
+    public String getEducation()
+    {
+        return education;
+    }
+
+    public void setEducation(String education)
+    {
+        this.education = education;
+    }
+
+    public String getUniversity()
+    {
+        return university;
+    }
+
+    public void setUniversity(String university)
+    {
+        this.university = university;
     }
 }

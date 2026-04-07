@@ -40,7 +40,7 @@
 	{
 	  "path": "pages/coursePublish/coursePublish",
 	  "style": {
-	    "navigationBarTitleText": "上架课程"
+	    "navigationBarTitleText": "发布家教信息"
 	  }
 	},
 	{
@@ -232,7 +232,7 @@
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "RuoYi",
+    "navigationBarTitleText": "聚星教育",
     "navigationBarBackgroundColor": "#FFFFFF"
   }
 }
