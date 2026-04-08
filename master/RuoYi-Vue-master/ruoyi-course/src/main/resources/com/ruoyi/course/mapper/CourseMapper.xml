@@ -8,11 +8,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="courseId"    column="course_id"    />
         <result property="studentId"    column="student_id"    />
         <result property="teacherId"    column="teacher_id"    />
+        <result property="publishId"    column="publish_id"    />
         <result property="subjectId"    column="subject_id"    />
         <result property="gradeId"    column="grade_id"    />
         <result property="status"    column="status"    />
         <result property="startDate"    column="start_date"    />
         <result property="address"    column="address"    />
+        <result property="timeSlot"    column="time_slot"    />
+        <result property="classAddress"    column="class_address"    />
+        <result property="contactInfo"    column="contact_info"    />
+        <result property="contactNote"    column="contact_note"    />
+        <result property="cancelReason"    column="cancel_reason"    />
         <result property="expectedHours"    column="expected_hours"    />
         <result property="completedHours"    column="completed_hours"    />
         <result property="hourlyRate"    column="hourly_rate"    />
@@ -23,8 +29,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectCourseVo">
-        select c.course_id, c.student_id, c.teacher_id, c.subject_id, c.grade_id, c.status, c.start_date,
-               c.address, c.expected_hours, c.completed_hours, c.hourly_rate, c.created_at,
+        select c.course_id, c.student_id, c.teacher_id, c.publish_id, c.subject_id, c.grade_id, c.status, c.start_date,
+               c.address, c.time_slot, c.class_address, c.contact_info, c.contact_note, c.cancel_reason,
+               c.expected_hours, c.completed_hours, c.hourly_rate, c.created_at,
                st.real_name as student_name, u.phone as student_phone, t.real_name as teacher_name
           from course c
           left join student st on st.student_id = c.student_id
@@ -37,11 +44,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="studentId != null  and studentId != ''"> and c.student_id = #{studentId}</if>
             <if test="teacherId != null  and teacherId != ''"> and c.teacher_id = #{teacherId}</if>
+            <if test="publishId != null  and publishId != ''"> and c.publish_id = #{publishId}</if>
             <if test="subjectId != null  and subjectId != ''"> and c.subject_id = #{subjectId}</if>
             <if test="gradeId != null  and gradeId != ''"> and c.grade_id = #{gradeId}</if>
             <if test="status != null "> and c.status = #{status}</if>
             <if test="startDate != null "> and c.start_date = #{startDate}</if>
             <if test="address != null  and address != ''"> and c.address like concat('%', #{address}, '%')</if>
+            <if test="timeSlot != null and timeSlot != ''"> and c.time_slot = #{timeSlot}</if>
+            <if test="classAddress != null and classAddress != ''"> and c.class_address like concat('%', #{classAddress}, '%')</if>
+            <if test="contactInfo != null and contactInfo != ''"> and c.contact_info like concat('%', #{contactInfo}, '%')</if>
+            <if test="contactNote != null and contactNote != ''"> and c.contact_note like concat('%', #{contactNote}, '%')</if>
+            <if test="cancelReason != null and cancelReason != ''"> and c.cancel_reason like concat('%', #{cancelReason}, '%')</if>
             <if test="expectedHours != null  and expectedHours != ''"> and c.expected_hours = #{expectedHours}</if>
             <if test="completedHours != null  and completedHours != ''"> and c.completed_hours = #{completedHours}</if>
             <if test="hourlyRate != null "> and c.hourly_rate = #{hourlyRate}</if>
@@ -59,10 +72,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id,</if>
             <if test="teacherId != null and teacherId != ''">teacher_id,</if>
+            <if test="publishId != null and publishId != ''">publish_id,</if>
             <if test="subjectId != null and subjectId != ''">subject_id,</if>
             <if test="status != null">status,</if>
             <if test="startDate != null">start_date,</if>
             <if test="address != null and address != ''">address,</if>
+            <if test="timeSlot != null and timeSlot != ''">time_slot,</if>
+            <if test="classAddress != null and classAddress != ''">class_address,</if>
+            <if test="contactInfo != null and contactInfo != ''">contact_info,</if>
+            <if test="contactNote != null and contactNote != ''">contact_note,</if>
+            <if test="cancelReason != null and cancelReason != ''">cancel_reason,</if>
             <if test="expectedHours != null and expectedHours != ''">expected_hours,</if>
             <if test="completedHours != null">completed_hours,</if>
             <if test="hourlyRate != null">hourly_rate,</if>
@@ -72,10 +91,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
             <if test="teacherId != null and teacherId != ''">#{teacherId},</if>
+            <if test="publishId != null and publishId != ''">#{publishId},</if>
             <if test="subjectId != null and subjectId != ''">#{subjectId},</if>
             <if test="status != null">#{status},</if>
             <if test="startDate != null">#{startDate},</if>
             <if test="address != null and address != ''">#{address},</if>
+            <if test="timeSlot != null and timeSlot != ''">#{timeSlot},</if>
+            <if test="classAddress != null and classAddress != ''">#{classAddress},</if>
+            <if test="contactInfo != null and contactInfo != ''">#{contactInfo},</if>
+            <if test="contactNote != null and contactNote != ''">#{contactNote},</if>
+            <if test="cancelReason != null and cancelReason != ''">#{cancelReason},</if>
             <if test="expectedHours != null and expectedHours != ''">#{expectedHours},</if>
             <if test="completedHours != null">#{completedHours},</if>
             <if test="hourlyRate != null">#{hourlyRate},</if>
@@ -89,11 +114,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
             <if test="teacherId != null and teacherId != ''">teacher_id = #{teacherId},</if>
+            <if test="publishId != null and publishId != ''">publish_id = #{publishId},</if>
             <if test="subjectId != null and subjectId != ''">subject_id = #{subjectId},</if>
             <if test="gradeId != null and gradeId != ''">grade_id = #{gradeId},</if>
             <if test="status != null">status = #{status},</if>
             <if test="startDate != null">start_date = #{startDate},</if>
             <if test="address != null">address = #{address},</if>
+            <if test="timeSlot != null">time_slot = #{timeSlot},</if>
+            <if test="classAddress != null">class_address = #{classAddress},</if>
+            <if test="contactInfo != null">contact_info = #{contactInfo},</if>
+            <if test="contactNote != null">contact_note = #{contactNote},</if>
+            <if test="cancelReason != null">cancel_reason = #{cancelReason},</if>
             <if test="expectedHours != null and expectedHours != ''">expected_hours = #{expectedHours},</if>
             <if test="completedHours != null">completed_hours = #{completedHours},</if>
             <if test="hourlyRate != null">hourly_rate = #{hourlyRate},</if>
@@ -123,8 +154,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 
     <select id="selectTeacherBookingAppList" resultMap="CourseResult">
-        select c.course_id, c.student_id, c.teacher_id, c.subject_id, c.grade_id, c.status, c.start_date,
-               c.address, c.expected_hours, c.completed_hours, c.hourly_rate, c.created_at,
+        select c.course_id, c.student_id, c.teacher_id, c.publish_id, c.subject_id, c.grade_id, c.status, c.start_date,
+               c.address, c.time_slot, c.class_address, c.contact_info, c.contact_note, c.cancel_reason,
+               c.expected_hours, c.completed_hours, c.hourly_rate, c.created_at,
                st.real_name as student_name, u.phone as student_phone, t.real_name as teacher_name
           from course c
           left join student st on st.student_id = c.student_id
@@ -142,6 +174,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
            set status = #{status}
          where course_id = #{courseId}
            and teacher_id = #{teacherId}
+    </update>
+
+    <update id="updateBookingStatusByStudent">
+        update course
+           set status = #{status},
+               cancel_reason = #{cancelReason}
+         where course_id = #{courseId}
+           and student_id = #{studentId}
     </update>
 
 </mapper>

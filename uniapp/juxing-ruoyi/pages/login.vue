@@ -269,7 +269,7 @@
 						const roles = (this.$store && this.$store.getters && this.$store.getters.roles) || []
 						uni.setTabBarItem({
 							index: 1,
-							text: roles.includes('teacher') ? '预约管理' : '找老师'
+							text: roles.includes('teacher') ? '工作台' : '找老师'
 						})
 					} catch (e) {}
 					uni.reLaunch({

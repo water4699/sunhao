@@ -21,13 +21,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="gradeName" column="grade_name"/>
         <result property="education" column="education"/>
         <result property="university" column="university"/>
+        <result property="bookingCount" column="booking_count"/>
     </resultMap>
 
     <sql id="selectTeacherPublishedCourseVo">
         select tpc.publish_id, tpc.teacher_id, tpc.subject_id, tpc.grade_id, tpc.status, tpc.start_date,
                tpc.address, tpc.expected_hours, tpc.hourly_rate, tpc.created_at,
                t.area_id, t.education, t.university,
-               t.real_name as teacher_name, t.image as teacher_image, s.name as subject_name, g.name as grade_name
+               t.real_name as teacher_name, t.image as teacher_image, s.name as subject_name, g.name as grade_name,
+               (select count(*) from course c where c.publish_id = tpc.publish_id and (c.status is null or c.status &lt;&gt; 2)) as booking_count
         from teacher_published_course tpc
         left join teacher t on t.teacher_id = tpc.teacher_id
         left join subject s on s.subject_id = tpc.subject_id
@@ -47,6 +49,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="gradeId != null and gradeId != ''">and tpc.grade_id = #{gradeId}</if>
             <if test="areaId != null and areaId != ''">and t.area_id = #{areaId}</if>
             <if test="teacherName != null and teacherName != ''">and t.real_name like concat('%', #{teacherName}, '%')</if>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    t.real_name like concat('%', #{keyword}, '%')
+                    or tpc.address like concat('%', #{keyword}, '%')
+                    or s.name like concat('%', #{keyword}, '%')
+                    or g.name like concat('%', #{keyword}, '%')
+                )
+            </if>
             <if test="status != null">and tpc.status = #{status}</if>
             <if test="address != null and address != ''">and tpc.address like concat('%', #{address}, '%')</if>
             <if test="startDate != null">and tpc.start_date = #{startDate}</if>
@@ -79,4 +89,32 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="createdAt != null">#{createdAt},</if>
         </trim>
     </insert>
+
+    <update id="updateTeacherPublishedCourse" parameterType="TeacherPublishedCourse">
+        update teacher_published_course
+        <trim prefix="set" suffixOverrides=",">
+            <if test="subjectId != null and subjectId != ''">subject_id = #{subjectId},</if>
+            <if test="gradeId != null and gradeId != ''">grade_id = #{gradeId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="expectedHours != null and expectedHours != ''">expected_hours = #{expectedHours},</if>
+            <if test="hourlyRate != null">hourly_rate = #{hourlyRate},</if>
+        </trim>
+        where publish_id = #{publishId}
+          and teacher_id = #{teacherId}
+    </update>
+
+    <update id="updateTeacherPublishedCourseStatus" parameterType="TeacherPublishedCourse">
+        update teacher_published_course
+           set status = #{status}
+         where publish_id = #{publishId}
+           and teacher_id = #{teacherId}
+    </update>
+
+    <delete id="deleteTeacherPublishedCourse" parameterType="TeacherPublishedCourse">
+        delete from teacher_published_course
+         where publish_id = #{publishId}
+           and teacher_id = #{teacherId}
+    </delete>
 </mapper>

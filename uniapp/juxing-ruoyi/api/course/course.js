@@ -18,7 +18,16 @@ export function addCourse(data) {
   })
 }
 
-/** 老师：上架课程 */
+/** 学生端：取消预约/申请取消 */
+export function cancelBooking(courseId, cancelReason) {
+  return request({
+    url: `/system/course/app/booking/${courseId}/cancel`,
+    method: 'post',
+    data: { cancelReason: cancelReason || '' }
+  })
+}
+
+/** 老师：发布家教信息 */
 export function publishTeacherCourse(data) {
   return request({
     url: '/system/course/app/publish',
@@ -45,6 +54,41 @@ export function getPublishedCourseDetail(publishId) {
   return request({
     url: `/system/course/app/published/${publishId}`,
     method: 'get'
+  })
+}
+
+/** 老师端：我的家教信息列表 */
+export function listMyPublishedCourses(query) {
+  return request({
+    url: '/system/course/app/my-published/list',
+    method: 'get',
+    params: query
+  })
+}
+
+/** 老师端：更新我的家教信息 */
+export function updateMyPublishedCourse(publishId, data) {
+  return request({
+    url: `/system/course/app/my-published/${publishId}`,
+    method: 'put',
+    data
+  })
+}
+
+/** 老师端：上架/下架我的家教信息（0上架 1下架） */
+export function updateMyPublishedCourseStatus(publishId, status) {
+  return request({
+    url: `/system/course/app/my-published/${publishId}/status`,
+    method: 'post',
+    data: { status }
+  })
+}
+
+/** 老师端：删除我的家教信息 */
+export function deleteMyPublishedCourse(publishId) {
+  return request({
+    url: `/system/course/app/my-published/${publishId}`,
+    method: 'delete'
   })
 }
 

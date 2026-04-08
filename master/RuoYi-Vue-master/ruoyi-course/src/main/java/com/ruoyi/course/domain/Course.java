@@ -26,6 +26,10 @@ public class Course extends BaseEntity
     @Excel(name = "教师ID")
     private String teacherId;
 
+    /** 家教发布信息ID */
+    @Excel(name = "家教发布信息ID")
+    private String publishId;
+
     /** 科目ID */
     @Excel(name = "科目ID")
     private String subjectId;
@@ -46,6 +50,26 @@ public class Course extends BaseEntity
     /** 上课地址 */
     @Excel(name = "上课地址")
     private String address;
+
+    /** 上课时段 */
+    @Excel(name = "上课时段")
+    private String timeSlot;
+
+    /** 上课详细地址 */
+    @Excel(name = "上课详细地址")
+    private String classAddress;
+
+    /** 预约联系方式 */
+    @Excel(name = "预约联系方式")
+    private String contactInfo;
+
+    /** 预约留言 */
+    @Excel(name = "预约留言")
+    private String contactNote;
+
+    /** 取消原因 */
+    @Excel(name = "取消原因")
+    private String cancelReason;
 
     /** 预期课时 */
     @Excel(name = "预期课时")
@@ -102,6 +126,16 @@ public class Course extends BaseEntity
         return teacherId;
     }
 
+    public String getPublishId()
+    {
+        return publishId;
+    }
+
+    public void setPublishId(String publishId)
+    {
+        this.publishId = publishId;
+    }
+
     public void setSubjectId(String subjectId) 
     {
         this.subjectId = subjectId;
@@ -150,6 +184,56 @@ public class Course extends BaseEntity
     public String getAddress()
     {
         return address;
+    }
+
+    public String getTimeSlot()
+    {
+        return timeSlot;
+    }
+
+    public void setTimeSlot(String timeSlot)
+    {
+        this.timeSlot = timeSlot;
+    }
+
+    public String getClassAddress()
+    {
+        return classAddress;
+    }
+
+    public void setClassAddress(String classAddress)
+    {
+        this.classAddress = classAddress;
+    }
+
+    public String getContactInfo()
+    {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo)
+    {
+        this.contactInfo = contactInfo;
+    }
+
+    public String getContactNote()
+    {
+        return contactNote;
+    }
+
+    public void setContactNote(String contactNote)
+    {
+        this.contactNote = contactNote;
+    }
+
+    public String getCancelReason()
+    {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason)
+    {
+        this.cancelReason = cancelReason;
     }
 
     public void setExpectedHours(String expectedHours) 
@@ -228,11 +312,17 @@ public class Course extends BaseEntity
             .append("courseId", getCourseId())
             .append("studentId", getStudentId())
             .append("teacherId", getTeacherId())
+            .append("publishId", getPublishId())
             .append("subjectId", getSubjectId())
             .append("gradeId", getGradeId())
             .append("status", getStatus())
             .append("startDate", getStartDate())
             .append("address", getAddress())
+            .append("timeSlot", getTimeSlot())
+            .append("classAddress", getClassAddress())
+            .append("contactInfo", getContactInfo())
+            .append("contactNote", getContactNote())
+            .append("cancelReason", getCancelReason())
             .append("expectedHours", getExpectedHours())
             .append("completedHours", getCompletedHours())
             .append("hourlyRate", getHourlyRate())

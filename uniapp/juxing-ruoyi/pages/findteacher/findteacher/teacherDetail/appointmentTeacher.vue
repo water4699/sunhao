@@ -25,6 +25,10 @@
           </view>
           <text class="rating-text">{{ rating }}分</text>
         </view>
+        <view class="fee-row">
+          <text class="fee-label">{{ feeLabel }}</text>
+          <text class="fee-value">¥{{ hourlyFee || 0 }}/课时</text>
+        </view>
       </view>
     </view>
 
@@ -105,9 +109,10 @@
 				teacherName: '',
 				teacherSubjects: '',
 				teacherSubjectId: '',
-				publishId: '',
-				rating: 0,
-				hourlyFee: 0,
+					publishId: '',
+					bookingSource: 'teacher',
+					rating: 0,
+					hourlyFee: 0,
 				selectedDate: '',
 				selectedTime: '',
 				address: '',
@@ -124,10 +129,13 @@
 			fullStars() {
 				return Math.floor(Number(this.rating) || 0)
 			},
-			hasHalfStar() {
-				return (Number(this.rating) || 0) % 1 >= 0.5
-			}
-		},
+				hasHalfStar() {
+					return (Number(this.rating) || 0) % 1 >= 0.5
+				},
+				feeLabel() {
+					return this.bookingSource === 'tutoring' ? '家教课时费' : '老师预期时薪'
+				}
+			},
 		onLoad(options) {
 			if (!getToken()) {
 				uni.showToast({
@@ -141,9 +149,10 @@
 				}, 800)
 				return
 			}
-			this.id = (options && (options.id || options.teacherId)) || ''
-			this.publishId = (options && options.publishId) || ''
-			const d = new Date()
+				this.id = (options && (options.id || options.teacherId)) || ''
+				this.publishId = (options && options.publishId) || ''
+				this.bookingSource = this.publishId ? 'tutoring' : 'teacher'
+				const d = new Date()
 			this.startDate = this.fmtDate(d)
 			const end = new Date(d.getTime() + 90 * 86400000)
 			this.endDate = this.fmtDate(end)
@@ -158,9 +167,10 @@
 				const day = String(d.getDate()).padStart(2, '0')
 				return `${y}-${m}-${day}`
 			},
-			loadTeacher() {
+			async loadTeacher() {
 				if (!this.id) return
-				getOneTeacher(this.id).then(res => {
+				try {
+					const res = await getOneTeacher(this.id)
 					const t = res.data
 					if (!t) return
 					const img = t.image || ''
@@ -173,16 +183,18 @@
 					const sid = t.subjectId
 					this.teacherSubjectId = sid != null && sid !== '' ? String(sid) : ''
 					this.rating = Number(t.rating) || 0
-					this.hourlyFee = t.hourlyRate != null ? t.hourlyRate : 0
-				}).catch(() => {})
+					if (!this.publishId) this.hourlyFee = t.hourlyRate != null ? t.hourlyRate : 0
+				} catch (e) {}
 				if (this.publishId) {
-					getPublishedCourseDetail(this.publishId).then(res => {
+					try {
+						const res = await getPublishedCourseDetail(this.publishId)
 						const row = res.data || {}
 						if (!row) return
 						if (row.subjectName) this.teacherSubjects = row.subjectName
 						if (row.subjectId != null && row.subjectId !== '') this.teacherSubjectId = String(row.subjectId)
 						if (row.hourlyRate != null) this.hourlyFee = row.hourlyRate
-					}).catch(() => {})
+						this.bookingSource = 'tutoring'
+					} catch (e) {}
 				}
 			},
 			handleDateChange(e) {
@@ -212,13 +224,20 @@
 				const payload = {
 					teacherId: String(this.id),
 					startDate: this.selectedDate,
-					address: `时段：${this.selectedTime}\n地址：${address}\n联系方式：${contactPhone}${contactNote ? `\n留言：${contactNote}` : ''}`,
+					address: address,
+					timeSlot: this.selectedTime,
+					classAddress: address,
+					contactInfo: contactPhone,
+					contactNote: contactNote,
 					hourlyRate: this.hourlyFee,
 					expectedHours: '1',
 					status: 0
 				}
 				if (this.teacherSubjectId) {
 					payload.subjectId = this.teacherSubjectId
+				}
+				if (this.publishId) {
+					payload.publishId = this.publishId
 				}
 				uni.showLoading({
 					title: '提交中...'
@@ -326,6 +345,27 @@ page {
 .rating-text {
   color: #B4916E;
   font-size: 16px;
+}
+
+.fee-row {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+
+.fee-label {
+  margin-right: 12rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: #FFF3CD;
+  color: #8B4513;
+  font-size: 12px;
+}
+
+.fee-value {
+  color: #FF6A00;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .booking-form {

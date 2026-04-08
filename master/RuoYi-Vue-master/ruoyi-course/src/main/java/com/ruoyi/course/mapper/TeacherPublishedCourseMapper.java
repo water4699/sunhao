@@ -12,4 +12,10 @@ public interface TeacherPublishedCourseMapper
     TeacherPublishedCourse selectTeacherPublishedCourseById(String publishId);
 
     java.util.List<TeacherPublishedCourse> selectTeacherPublishedCourseList(TeacherPublishedCourse query);
+
+    int updateTeacherPublishedCourse(TeacherPublishedCourse course);
+
+    int updateTeacherPublishedCourseStatus(TeacherPublishedCourse course);
+
+    int deleteTeacherPublishedCourse(TeacherPublishedCourse course);
 }

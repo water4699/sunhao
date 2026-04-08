@@ -225,10 +225,10 @@
 				return this.roles.includes('teacher')
 			},
 			mainEntryTitle() {
-				return this.isTeacher ? '发布家教信息' : '找老师'
+				return this.isTeacher ? '老师工作台' : '找老师'
 			},
 			mainEntryDesc() {
-				return this.isTeacher ? '发布可接单信息，让学生主动找到你' : '按科目地区快速找老师'
+				return this.isTeacher ? '发布、管理家教信息和预约' : '按科目地区快速找老师'
 			},
 			secondEntryTitle() {
 				return this.isTeacher ? '老师入驻' : '学习进步'
@@ -254,7 +254,7 @@
 				try {
 					uni.setTabBarItem({
 						index: 1,
-						text: this.isTeacher ? '预约管理' : '找老师'
+						text: this.isTeacher ? '工作台' : '找老师'
 					})
 				} catch (e) {}
 			},
@@ -336,19 +336,12 @@
 				})
 				return false
 			},
-
-			async handleNavigateToTeacher() {
-				if (this.isTeacher) {
-					if (!(await this.ensureTeacherApproved())) return
-					uni.navigateTo({
-						url: '/pages/coursePublish/coursePublish'
+				async handleNavigateToTeacher() {
+					if (this.isTeacher && !(await this.ensureTeacherApproved())) return
+					uni.switchTab({
+						url: '/pages/findteacher/findteacher/findteacher'
 					})
-					return
-				}
-				uni.switchTab({
-					url: '/pages/findteacher/findteacher/findteacher'
-				})
-			},
+				},
 			teacherJoin() {
 				if (!getToken()) {
 					uni.navigateTo({ url: '/pages/login' })

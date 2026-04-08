@@ -38,7 +38,7 @@
         const isTeacher = roles.includes('teacher')
         uni.setTabBarItem({
           index: 1,
-          text: isTeacher ? '预约管理' : '找老师'
+          text: isTeacher ? '工作台' : '找老师'
         })
       },
       checkLogin() {

@@ -47,6 +47,29 @@ public class CourseController extends BaseController
     @Autowired
     private ITeacherService teacherService;
 
+    private Teacher currentApprovedTeacherOrThrow()
+    {
+        LoginUser lu = SecurityUtils.getLoginUser();
+        if (lu == null || !lu.isBusinessUser())
+        {
+            throw new RuntimeException("请先登录");
+        }
+        if (!"teacher".equalsIgnoreCase(lu.getBusinessUsersType()))
+        {
+            throw new RuntimeException("仅老师账号可操作");
+        }
+        Teacher teacher = teacherService.selectTeacherByUserId(String.valueOf(lu.getUserId()));
+        if (teacher == null)
+        {
+            throw new RuntimeException("请先提交老师入驻申请");
+        }
+        if (teacher.getStatus() == null || teacher.getStatus() != 1L)
+        {
+            throw new RuntimeException("入驻申请审核通过后才可操作");
+        }
+        return teacher;
+    }
+
     /** 业务端 users 登录 JWT 中带 *:*:*，列表/导出必须按本人 student 维度收口，避免横向越权 */
     private String businessStudentIdOrNull()
     {
@@ -189,23 +212,14 @@ public class CourseController extends BaseController
     @PostMapping("/app/publish")
     public AjaxResult appPublish(@RequestBody Course course)
     {
-        LoginUser lu = SecurityUtils.getLoginUser();
-        if (lu == null || !lu.isBusinessUser())
+        Teacher teacher;
+        try
         {
-            return error("请先登录");
+            teacher = currentApprovedTeacherOrThrow();
         }
-        if (!"teacher".equalsIgnoreCase(lu.getBusinessUsersType()))
+        catch (RuntimeException e)
         {
-            return error("仅老师账号可上架课程");
-        }
-        Teacher teacher = teacherService.selectTeacherByUserId(String.valueOf(lu.getUserId()));
-        if (teacher == null)
-        {
-            return error("请先提交老师入驻申请");
-        }
-        if (teacher.getStatus() == null || teacher.getStatus() != 1L)
-        {
-            return error("入驻申请审核通过后才可上架课程");
+            return error(e.getMessage());
         }
         if (course.getStartDate() == null)
         {
@@ -244,6 +258,86 @@ public class CourseController extends BaseController
         published.setHourlyRate(course.getHourlyRate());
         published.setCreatedAt(course.getCreatedAt());
         return toAjax(courseService.insertTeacherPublishedCourse(published));
+    }
+
+    @GetMapping("/app/my-published/list")
+    public TableDataInfo appMyPublishedList(TeacherPublishedCourse query)
+    {
+        Teacher teacher;
+        try
+        {
+            teacher = currentApprovedTeacherOrThrow();
+        }
+        catch (RuntimeException e)
+        {
+            return getDataTable(Collections.emptyList());
+        }
+        if (query == null)
+        {
+            query = new TeacherPublishedCourse();
+        }
+        query.setTeacherId(teacher.getTeacherId());
+        startPage();
+        List<TeacherPublishedCourse> list = courseService.selectTeacherPublishedCourseList(query);
+        return getDataTable(list);
+    }
+
+    @PutMapping("/app/my-published/{publishId}")
+    public AjaxResult appUpdateMyPublished(@PathVariable("publishId") String publishId, @RequestBody TeacherPublishedCourse body)
+    {
+        Teacher teacher;
+        try
+        {
+            teacher = currentApprovedTeacherOrThrow();
+        }
+        catch (RuntimeException e)
+        {
+            return error(e.getMessage());
+        }
+        if (body == null)
+        {
+            return error("参数不能为空");
+        }
+        body.setPublishId(publishId);
+        body.setTeacherId(teacher.getTeacherId());
+        return toAjax(courseService.updateTeacherPublishedCourse(body));
+    }
+
+    @PostMapping("/app/my-published/{publishId}/status")
+    public AjaxResult appUpdateMyPublishedStatus(@PathVariable("publishId") String publishId, @RequestBody TeacherPublishedCourse body)
+    {
+        Teacher teacher;
+        try
+        {
+            teacher = currentApprovedTeacherOrThrow();
+        }
+        catch (RuntimeException e)
+        {
+            return error(e.getMessage());
+        }
+        TeacherPublishedCourse row = new TeacherPublishedCourse();
+        row.setPublishId(publishId);
+        row.setTeacherId(teacher.getTeacherId());
+        row.setStatus(body == null ? null : body.getStatus());
+        return toAjax(courseService.updateTeacherPublishedCourseStatus(row));
+    }
+
+    @DeleteMapping("/app/my-published/{publishId}")
+    public AjaxResult appDeleteMyPublished(@PathVariable("publishId") String publishId)
+    {
+        Teacher teacher;
+        try
+        {
+            teacher = currentApprovedTeacherOrThrow();
+        }
+        catch (RuntimeException e)
+        {
+            return error(e.getMessage());
+        }
+        TeacherPublishedCourse row = new TeacherPublishedCourse();
+        row.setPublishId(publishId);
+        row.setTeacherId(teacher.getTeacherId());
+        return toAjax(courseService.deleteTeacherPublishedCourse(row));
     }
 
     /**
@@ -328,6 +422,17 @@ public class CourseController extends BaseController
         }
         Long status = body == null ? null : body.getStatus();
         return toAjax(courseService.teacherDecideBooking(teacher.getTeacherId(), courseId, status));
+    }
+
+    @PostMapping("/app/booking/{courseId}/cancel")
+    public AjaxResult appStudentCancelBooking(@PathVariable("courseId") String courseId, @RequestBody(required = false) Course body)
+    {
+        String sid = businessStudentIdOrNull();
+        if (sid == null || StringUtils.isEmpty(sid))
+        {
+            return error("请先登录学生或家长账号");
+        }
+        return toAjax(courseService.studentCancelBooking(sid, courseId, body == null ? null : body.getCancelReason()));
     }
 
     /**

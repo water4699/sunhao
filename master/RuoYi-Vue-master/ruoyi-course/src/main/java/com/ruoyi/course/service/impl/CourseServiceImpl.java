@@ -120,6 +120,60 @@ public class CourseServiceImpl implements ICourseService
         return teacherPublishedCourseMapper.selectTeacherPublishedCourseById(publishId);
     }
 
+    @Override
+    public int updateTeacherPublishedCourse(TeacherPublishedCourse course)
+    {
+        if (course == null || StringUtils.isEmpty(course.getPublishId()) || StringUtils.isEmpty(course.getTeacherId()))
+        {
+            throw new ServiceException("发布信息参数不完整");
+        }
+        if (StringUtils.isEmpty(course.getSubjectId()))
+        {
+            throw new ServiceException("请选择科目");
+        }
+        if (StringUtils.isEmpty(course.getGradeId()))
+        {
+            throw new ServiceException("请选择年级");
+        }
+        if (course.getStartDate() == null)
+        {
+            throw new ServiceException("请选择可授课日期");
+        }
+        if (StringUtils.isEmpty(course.getAddress()))
+        {
+            throw new ServiceException("请输入家教说明或授课地址");
+        }
+        if (course.getHourlyRate() == null)
+        {
+            throw new ServiceException("请输入课时费用");
+        }
+        return teacherPublishedCourseMapper.updateTeacherPublishedCourse(course);
+    }
+
+    @Override
+    public int updateTeacherPublishedCourseStatus(TeacherPublishedCourse course)
+    {
+        if (course == null || StringUtils.isEmpty(course.getPublishId()) || StringUtils.isEmpty(course.getTeacherId()) || course.getStatus() == null)
+        {
+            throw new ServiceException("发布状态参数不完整");
+        }
+        if (course.getStatus() != 0L && course.getStatus() != 1L)
+        {
+            throw new ServiceException("仅支持上架(0)或下架(1)");
+        }
+        return teacherPublishedCourseMapper.updateTeacherPublishedCourseStatus(course);
+    }
+
+    @Override
+    public int deleteTeacherPublishedCourse(TeacherPublishedCourse course)
+    {
+        if (course == null || StringUtils.isEmpty(course.getPublishId()) || StringUtils.isEmpty(course.getTeacherId()))
+        {
+            throw new ServiceException("发布信息参数不完整");
+        }
+        return teacherPublishedCourseMapper.deleteTeacherPublishedCourse(course);
+    }
+
     /**
      * course.student_id 外键指向 student.student_id；小程序常传 users.users_id。
      * 先按 student_id 命中则不变；否则按 user_id 找档案；再无则对学员/家长用户自动补一条 student。
@@ -281,11 +335,57 @@ public class CourseServiceImpl implements ICourseService
         {
             throw new ServiceException("无权处理该预约");
         }
-        if (existing.getStatus() != null && existing.getStatus() != 0L)
+        Long current = existing.getStatus();
+        if (current != null && current == 3L)
+        {
+            if (status != 2L)
+            {
+                throw new ServiceException("取消申请仅支持同意取消");
+            }
+            return courseMapper.updateBookingStatusByTeacher(courseId, teacherId, status);
+        }
+        if (current != null && current != 0L)
         {
             throw new ServiceException("该预约已处理，请勿重复操作");
         }
         return courseMapper.updateBookingStatusByTeacher(courseId, teacherId, status);
+    }
+
+    @Override
+    public int studentCancelBooking(String studentId, String courseId, String cancelReason)
+    {
+        if (StringUtils.isEmpty(studentId) || StringUtils.isEmpty(courseId))
+        {
+            throw new ServiceException("参数不能为空");
+        }
+        Course existing = courseMapper.selectCourseByCourseId(courseId);
+        if (existing == null)
+        {
+            throw new ServiceException("预约记录不存在");
+        }
+        if (!studentId.equals(existing.getStudentId()))
+        {
+            throw new ServiceException("只能取消自己的预约");
+        }
+        String reason = StringUtils.isEmpty(cancelReason) ? "学生主动取消" : cancelReason.trim();
+        if (reason.length() > 200)
+        {
+            throw new ServiceException("取消原因不能超过200字");
+        }
+        Long current = existing.getStatus();
+        if (current == null || current == 0L)
+        {
+            return courseMapper.updateBookingStatusByStudent(courseId, studentId, 2L, reason);
+        }
+        if (current == 1L)
+        {
+            return courseMapper.updateBookingStatusByStudent(courseId, studentId, 3L, reason);
+        }
+        if (current == 3L)
+        {
+            throw new ServiceException("已提交取消申请，请等待老师处理");
+        }
+        throw new ServiceException("当前状态不可取消");
     }
 
 }

@@ -71,4 +71,9 @@ public interface CourseMapper
      * 教师端：处理预约（1同意/2拒绝）
      */
     public int updateBookingStatusByTeacher(@Param("courseId") String courseId, @Param("teacherId") String teacherId, @Param("status") Long status);
+
+    /**
+     * 学生端：取消预约/申请取消。
+     */
+    public int updateBookingStatusByStudent(@Param("courseId") String courseId, @Param("studentId") String studentId, @Param("status") Long status, @Param("cancelReason") String cancelReason);
 }

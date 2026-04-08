@@ -36,11 +36,6 @@
 				<uni-icons type="right" size="16" color="#ccc" />
 			</view>
 
-			<view class="function-box" @click="handleVipClick">
-				<uni-icons type="vip" size="22" color="#666" />
-				<text class="function-text">我的会员卡</text>
-				<uni-icons type="right" size="16" color="#ccc" />
-			</view>
 
 			<view class="function-box" @click="handleAbout">
 				<uni-icons type="info" size="22" color="#666" />
@@ -100,13 +95,9 @@
 				this.$tab.navigateTo('/pages/mine/order/order')
 			},
 			handleReviewClick() {
-				this.$tab.navigateTo('/pages/review/review')
-			},
-			handleVipClick() {
-				uni.showToast({ title: '会员卡功能暂未开放', icon: 'none' })
-			},
-			
-		}
+					this.$tab.navigateTo('/pages/review/review')
+				}
+			}
 	}
 </script>
 

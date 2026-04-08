@@ -1,49 +1,117 @@
 <template>
   <view class="page">
-    <view v-if="isTeacher" class="teacher-booking-page">
+    <view v-if="isTeacher" class="teacher-workbench-page">
       <view class="teacher-head">
-        <text class="teacher-title">预约管理</text>
-        <text class="teacher-sub">学生提交的预约会显示在这里</text>
+        <text class="teacher-title">老师工作台</text>
+        <text class="teacher-sub">统一管理入驻、家教信息、预约和评价</text>
       </view>
 
-      <view class="teacher-status-tabs">
-        <view
-          v-for="t in teacherTabs"
-          :key="t.value"
-          :class="['teacher-tab', teacherStatusFilter === t.value ? 'active' : '']"
-          @click="switchTeacherStatus(t.value)"
-        >{{ t.label }}</view>
+      <view class="workbench-grid">
+        <view class="workbench-card" @click="goTeacherJoin">
+          <text class="workbench-card-title">入驻状态</text>
+          <text class="workbench-card-sub">查看或完善入驻资料</text>
+        </view>
+        <view class="workbench-card primary" @click="goPublishTutorPost">
+          <text class="workbench-card-title">发布家教信息</text>
+          <text class="workbench-card-sub">让学生主动预约你</text>
+        </view>
+        <view :class="['workbench-card', teacherWorkMode === 'posts' ? 'active' : '']" @click="switchTeacherWorkMode('posts')">
+          <text class="workbench-card-title">我的家教信息</text>
+          <text class="workbench-card-sub">编辑、上下架、删除</text>
+        </view>
+        <view :class="['workbench-card', teacherWorkMode === 'booking' ? 'active' : '']" @click="switchTeacherWorkMode('booking')">
+          <text class="workbench-card-title">预约管理</text>
+          <text class="workbench-card-sub">处理学生预约和取消</text>
+        </view>
+        <view class="workbench-card" @click="goReviewList">
+          <text class="workbench-card-title">学生评价</text>
+          <text class="workbench-card-sub">查看家长/学生评价</text>
+        </view>
       </view>
 
-      <scroll-view class="teacher-booking-list" scroll-y @scrolltolower="loadMoreTeacherBookings">
-        <view v-if="teacherBookings.length === 0 && teacherLoadStatus !== 'loading'" class="empty-state">
-          <text class="empty-text">暂无预约请求</text>
-          <text class="empty-hint">学生在「找老师」预约后，会自动出现在这里</text>
+      <view v-if="teacherWorkMode === 'booking'" class="teacher-section">
+        <view class="section-title">预约管理</view>
+        <view class="teacher-status-tabs">
+          <view
+            v-for="t in teacherTabs"
+            :key="t.value"
+            :class="['teacher-tab', teacherStatusFilter === t.value ? 'active' : '']"
+            @click="switchTeacherStatus(t.value)"
+          >{{ t.label }}</view>
         </view>
 
-        <view v-else>
-          <view class="booking-card" v-for="item in teacherBookings" :key="item.courseId">
-            <view class="booking-row between">
-              <text class="booking-no">预约号：{{ item.courseId }}</text>
-              <text :class="['booking-status', statusClass(item.status)]">{{ statusText(item.status) }}</text>
-            </view>
-            <view class="booking-row">学员：{{ item.studentName || ('学员' + (item.studentId || '-')) }}</view>
-            <view class="booking-row" v-if="bookingContact(item)">联系方式：{{ bookingContact(item) }}</view>
-            <view class="booking-row">日期：{{ item.startDate || '-' }}</view>
-            <view class="booking-row">地址：{{ bookingAddress(item) }}</view>
-            <view class="booking-row" v-if="bookingNote(item)">留言：{{ bookingNote(item) }}</view>
-            <view class="booking-row">课时费：¥{{ item.hourlyRate || 0 }}</view>
-
-            <view v-if="Number(item.status) === 0" class="booking-actions">
-              <button class="btn reject" size="mini" @click="decide(item, 2)">拒绝</button>
-              <button class="btn approve" size="mini" @click="decide(item, 1)">同意</button>
-            </view>
+        <scroll-view class="teacher-booking-list" scroll-y @scrolltolower="loadMoreTeacherBookings">
+          <view v-if="teacherBookings.length === 0 && teacherLoadStatus !== 'loading'" class="empty-state compact">
+            <text class="empty-text">暂无预约请求</text>
+            <text class="empty-hint">学生在「老师库」或「家教信息」中预约后，会自动出现在这里</text>
           </view>
 
-          <view v-if="teacherLoadStatus === 'loading'" class="load-more">加载中...</view>
-          <view v-if="teacherLoadStatus === 'nomore' && teacherBookings.length > 0" class="load-more">没有更多了</view>
-        </view>
-      </scroll-view>
+          <view v-else>
+            <view class="booking-card" v-for="item in teacherBookings" :key="item.courseId">
+              <view class="booking-row between">
+                <text class="booking-no">预约号：{{ item.courseId }}</text>
+                <text :class="['booking-status', statusClass(item.status)]">{{ statusText(item.status) }}</text>
+              </view>
+              <view class="booking-row">学员：{{ item.studentName || ('学员' + (item.studentId || '-')) }}</view>
+              <view class="booking-row" v-if="bookingContact(item)">联系方式：{{ bookingContact(item) }}</view>
+              <view class="booking-row">日期：{{ item.startDate || '-' }}</view>
+              <view class="booking-row">地址：{{ bookingAddress(item) }}</view>
+              <view class="booking-row" v-if="bookingNote(item)">留言：{{ bookingNote(item) }}</view>
+              <view class="booking-row" v-if="bookingCancelReason(item)">取消原因：{{ bookingCancelReason(item) }}</view>
+              <view class="booking-row">课时费：¥{{ item.hourlyRate || 0 }}</view>
+
+              <view v-if="Number(item.status) === 0" class="booking-actions">
+                <button class="btn reject" size="mini" @click="decide(item, 2)">拒绝</button>
+                <button class="btn approve" size="mini" @click="decide(item, 1)">同意</button>
+              </view>
+              <view v-else-if="Number(item.status) === 3" class="booking-actions">
+                <button class="btn reject" size="mini" @click="decideCancel(item)">同意取消</button>
+              </view>
+            </view>
+
+            <view v-if="teacherLoadStatus === 'loading'" class="load-more">加载中...</view>
+            <view v-if="teacherLoadStatus === 'nomore' && teacherBookings.length > 0" class="load-more">没有更多了</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view v-else class="teacher-section">
+        <view class="section-title">我的家教信息</view>
+        <scroll-view class="teacher-post-list" scroll-y @scrolltolower="loadMoreMyPublishedPosts">
+          <view v-if="myPublishedPosts.length === 0 && postLoadStatus !== 'loading'" class="empty-state compact">
+            <text class="empty-text">暂无家教信息</text>
+            <text class="empty-hint">点击「发布家教信息」后，学生可在「家教信息」中看到并预约。</text>
+          </view>
+          <view v-else>
+            <view class="post-card" v-for="item in myPublishedPosts" :key="item.publishId">
+              <view class="booking-row between">
+                <text class="booking-no">发布编号：{{ item.publishId }}</text>
+                <text :class="['post-status', postStatusClass(item.status)]">{{ postStatusText(item.status) }}</text>
+              </view>
+              <view class="post-title">{{ tutoringTitle(item) }}</view>
+              <view class="booking-row">科目：{{ item.subjectName || '-' }}</view>
+              <view class="booking-row">年级：{{ item.gradeName || '-' }}</view>
+              <view class="booking-row">可开始日期：{{ tutoringStartDate(item) }}</view>
+              <view class="booking-row">说明：{{ item.address || '-' }}</view>
+              <view class="booking-row">预约次数：{{ item.bookingCount || 0 }}</view>
+              <view class="tutoring-feed-footer">
+                <view>
+                  <view class="tutoring-feed-price-label">家教课时费</view>
+                  <view class="tutoring-feed-price">¥{{ item.hourlyRate || 0 }}/课时</view>
+                </view>
+                <text class="tutoring-feed-no">{{ item.expectedHours || 1 }}课时起</text>
+              </view>
+              <view class="booking-actions">
+                <button class="btn plain" size="mini" @click="editPost(item)">编辑</button>
+                <button class="btn approve" size="mini" @click="togglePostStatus(item)">{{ Number(item.status) === 0 ? '下架' : '上架' }}</button>
+                <button class="btn reject" size="mini" @click="deletePost(item)">删除</button>
+              </view>
+            </view>
+            <view v-if="postLoadStatus === 'loading'" class="load-more">加载中...</view>
+            <view v-if="postLoadStatus === 'nomore' && myPublishedPosts.length > 0" class="load-more">没有更多了</view>
+          </view>
+        </scroll-view>
+      </view>
     </view>
 
     <view v-else class="student-page">
@@ -51,11 +119,11 @@
         <view
           :class="['student-switch-item', studentViewMode === 'teacher' ? 'active' : '']"
           @click="switchStudentView('teacher')"
-        >找老师</view>
+        >老师库</view>
         <view
           :class="['student-switch-item', studentViewMode === 'tutoring' ? 'active' : '']"
           @click="switchStudentView('tutoring')"
-        >选择家教</view>
+        >家教信息</view>
       </view>
 
       <view class="search-container">
@@ -88,7 +156,7 @@
       <scroll-view class="teacher-list" scroll-y @scrolltolower="loadMore">
         <view v-if="teacherList.length === 0 && loadStatus !== 'loading'" class="empty-state">
           <text class="empty-text">{{ studentViewMode === 'teacher' ? '未找到符合条件的老师' : '暂无匹配的家教信息' }}</text>
-          <text class="empty-hint">{{ studentViewMode === 'teacher' ? '已审核通过的老师会显示在这里，可按地区、年级、科目筛选。' : '老师发布的家教信息会显示在这里，学生可直接点击预约。' }}</text>
+          <text class="empty-hint">{{ studentViewMode === 'teacher' ? '已审核通过的老师会显示在老师库，可按地区、年级、科目筛选。' : '老师发布的家教信息会显示在这里，学生可直接点击预约。' }}</text>
         </view>
 
         <view v-else>
@@ -113,7 +181,8 @@
                 <view class="teacher-desc">{{ teacher.areaName || '授课地区待完善' }}</view>
               </view>
               <view class="teacher-right">
-                <view class="teacher-price">¥{{ teacher.hourlyRate }}/起</view>
+                <view class="teacher-price-label">预期时薪</view>
+                <view class="teacher-price">¥{{ teacher.hourlyRate || 0 }}/课时</view>
               </view>
             </view>
           </block>
@@ -137,7 +206,10 @@
               <view class="tutoring-feed-line">建议课时：{{ teacher.expectedHours || '1' }}课时</view>
               <view class="tutoring-feed-line">授课说明：{{ teacher.address || '老师暂未填写详细说明' }}</view>
               <view class="tutoring-feed-footer">
-                <text class="tutoring-feed-price">¥{{ teacher.hourlyRate || 0 }}/课时</text>
+                <view>
+                  <view class="tutoring-feed-price-label">家教课时费</view>
+                  <view class="tutoring-feed-price">¥{{ teacher.hourlyRate || 0 }}/课时</view>
+                </view>
                 <text class="tutoring-feed-action">点击预约</text>
               </view>
             </view>
@@ -156,7 +228,7 @@ import { findAllArea } from '@/api/teacher/area'
 import { findAllGrade } from '@/api/teacher/grade'
 import { findAllSubject } from '@/api/teacher/subject'
 import { getTeacherMag } from '@/api/teacher/getTeacherMag'
-import { listPublishedCourses, listTeacherBookings, decideTeacherBooking } from '@/api/course/course'
+import { listPublishedCourses, listTeacherBookings, decideTeacherBooking, listMyPublishedCourses, updateMyPublishedCourseStatus, deleteMyPublishedCourse } from '@/api/course/course'
 import { baseUrl } from '../../../config'
 
 export default {
@@ -181,14 +253,21 @@ export default {
         { label: '全部', value: -1 },
         { label: '待处理', value: 0 },
         { label: '已同意', value: 1 },
-        { label: '已拒绝', value: 2 }
+        { label: '已拒绝', value: 2 },
+        { label: '取消申请', value: 3 }
       ],
       teacherStatusFilter: 0,
       teacherBookings: [],
       teacherPage: 1,
       teacherTotal: 0,
       teacherLoadStatus: 'loadmore',
-      teacherRequestSeq: 0
+      teacherRequestSeq: 0,
+      teacherWorkMode: 'booking',
+      myPublishedPosts: [],
+      postPage: 1,
+      postTotal: 0,
+      postLoadStatus: 'loadmore',
+      postRequestSeq: 0
     }
   },
   computed: {
@@ -207,10 +286,11 @@ export default {
   },
   onShow() {
     try {
-      uni.setTabBarItem({ index: 1, text: this.isTeacher ? '预约管理' : '找老师' })
+      uni.setTabBarItem({ index: 1, text: this.isTeacher ? '工作台' : '找老师' })
     } catch (e) {}
     if (this.isTeacher) {
-      this.refreshTeacherBookings()
+      if (this.teacherWorkMode === 'posts') this.refreshMyPublishedPosts()
+      else this.refreshTeacherBookings()
     }
   },
   methods: {
@@ -227,6 +307,21 @@ export default {
         this.refreshList()
       }
     },
+    goTeacherJoin() {
+      uni.navigateTo({ url: '/pages/teacherJoin/teacherJoin' })
+    },
+    goPublishTutorPost() {
+      uni.navigateTo({ url: '/pages/coursePublish/coursePublish' })
+    },
+    goReviewList() {
+      uni.navigateTo({ url: '/pages/review/review' })
+    },
+    switchTeacherWorkMode(mode) {
+      if (this.teacherWorkMode === mode) return
+      this.teacherWorkMode = mode
+      if (mode === 'posts') this.refreshMyPublishedPosts()
+      else this.refreshTeacherBookings()
+    },
     switchStudentView(mode) {
       if (this.studentViewMode === mode) return
       this.studentViewMode = mode
@@ -239,6 +334,7 @@ export default {
       if (n === 0) return '待处理'
       if (n === 1) return '已同意'
       if (n === 2) return '已拒绝'
+      if (n === 3) return '取消申请'
       return '未知'
     },
     statusClass(s) {
@@ -246,6 +342,7 @@ export default {
       if (n === 0) return 'pending'
       if (n === 1) return 'approved'
       if (n === 2) return 'rejected'
+      if (n === 3) return 'pending'
       return ''
     },
     switchTeacherStatus(v) {
@@ -279,6 +376,70 @@ export default {
         this.teacherLoadStatus = 'loadmore'
       }
     },
+    refreshMyPublishedPosts() {
+      this.postPage = 1
+      this.myPublishedPosts = []
+      this.postLoadStatus = 'loadmore'
+      this.loadMoreMyPublishedPosts()
+    },
+    async loadMoreMyPublishedPosts() {
+      if (!this.isTeacher) return
+      if (this.postLoadStatus === 'loading' || this.postLoadStatus === 'nomore') return
+      this.postLoadStatus = 'loading'
+      const requestSeq = ++this.postRequestSeq
+      try {
+        const res = await listMyPublishedCourses({ pageNum: this.postPage, pageSize: this.pageSize })
+        if (requestSeq !== this.postRequestSeq) return
+        const rows = res.rows || []
+        if (this.postPage === 1) this.myPublishedPosts = rows
+        else this.myPublishedPosts = [...this.myPublishedPosts, ...rows]
+        this.postTotal = res.total != null ? res.total : this.myPublishedPosts.length
+        this.postPage += 1
+        this.postLoadStatus = (rows.length === 0 || this.myPublishedPosts.length >= this.postTotal) ? 'nomore' : 'loadmore'
+      } catch (e) {
+        if (requestSeq !== this.postRequestSeq) return
+        this.postLoadStatus = 'loadmore'
+      }
+    },
+    postStatusText(s) {
+      return Number(s) === 0 ? '上架中' : '已下架'
+    },
+    postStatusClass(s) {
+      return Number(s) === 0 ? 'approved' : 'rejected'
+    },
+    editPost(item) {
+      uni.navigateTo({ url: `/pages/coursePublish/coursePublish?publishId=${item.publishId}` })
+    },
+    togglePostStatus(item) {
+      const next = Number(item.status) === 0 ? 1 : 0
+      const text = next === 0 ? '上架' : '下架'
+      uni.showModal({
+        title: `确认${text}`,
+        content: `确定要${text}该家教信息吗？`,
+        success: async (r) => {
+          if (!r.confirm) return
+          try {
+            await updateMyPublishedCourseStatus(item.publishId, next)
+            uni.showToast({ title: `已${text}`, icon: 'success' })
+            this.refreshMyPublishedPosts()
+          } catch (e) {}
+        }
+      })
+    },
+    deletePost(item) {
+      uni.showModal({
+        title: '确认删除',
+        content: '删除后学生将无法再看到该家教信息，确定删除吗？',
+        success: async (r) => {
+          if (!r.confirm) return
+          try {
+            await deleteMyPublishedCourse(item.publishId)
+            uni.showToast({ title: '已删除', icon: 'success' })
+            this.refreshMyPublishedPosts()
+          } catch (e) {}
+        }
+      })
+    },
     decide(item, status) {
       const text = status === 1 ? '同意' : '拒绝'
       uni.showModal({
@@ -289,6 +450,20 @@ export default {
           try {
             await decideTeacherBooking(item.courseId, status)
             uni.showToast({ title: `已${text}`, icon: 'success' })
+            this.refreshTeacherBookings()
+          } catch (e) {}
+        }
+      })
+    },
+    decideCancel(item) {
+      uni.showModal({
+        title: '确认取消预约',
+        content: '确定同意学生取消该预约吗？',
+        success: async (r) => {
+          if (!r.confirm) return
+          try {
+            await decideTeacherBooking(item.courseId, 2)
+            uni.showToast({ title: '已取消', icon: 'success' })
             this.refreshTeacherBookings()
           } catch (e) {}
         }
@@ -350,6 +525,12 @@ export default {
       return data
     },
     bookingAddress(item) {
+      if (item && (item.timeSlot || item.classAddress)) {
+        const parts = []
+        if (item.timeSlot) parts.push(`时段：${item.timeSlot}`)
+        if (item.classAddress) parts.push(item.classAddress)
+        return parts.join('；') || '-'
+      }
       const parsed = this.parseBookingAddress(item && item.address)
       const parts = []
       if (parsed.time) parts.push(`时段：${parsed.time}`)
@@ -357,12 +538,17 @@ export default {
       return parts.join('；') || '-'
     },
     bookingContact(item) {
+      if (item && item.contactInfo) return item.contactInfo
       const parsed = this.parseBookingAddress(item && item.address)
       return parsed.contact || item.studentPhone || ''
     },
     bookingNote(item) {
+      if (item && item.contactNote) return item.contactNote
       const parsed = this.parseBookingAddress(item && item.address)
       return parsed.note || ''
+    },
+    bookingCancelReason(item) {
+      return item && item.cancelReason ? item.cancelReason : ''
     },
     goToTeacherDetail(input) {
       uni.navigateTo({ url: `/pages/findteacher/findteacher/teacherDetail/teacherDetail?id=${input}` })
@@ -408,8 +594,7 @@ export default {
         } else {
           params.status = 0
           if (this.searchText) {
-            params.address = this.searchText
-            params.teacherName = this.searchText
+            params.keyword = this.searchText
           }
           if (sid != null) params.subjectId = sid
           if (aid) params.areaId = aid
@@ -470,6 +655,7 @@ page { height: 100%; background-color: #f5f5f5; }
 .tag { font-size: 24rpx; color: #666; background: #f5f5f5; padding: 4rpx 12rpx; border-radius: 4rpx; margin-right: 12rpx; margin-bottom: 8rpx; }
 .teacher-desc { font-size: 24rpx; color: #999; line-height: 1.5; margin-top: 4rpx; }
 .teacher-right { text-align: right; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; }
+.teacher-price-label { font-size: 22rpx; color: #999; margin-bottom: 6rpx; }
 .teacher-price { font-size: 32rpx; color: #FF5252; font-weight: bold; }
 .tutoring-feed-card {
   background: #ffffff;
@@ -526,6 +712,11 @@ page { height: 100%; background-color: #f5f5f5; }
   color: #ff6a00;
   font-weight: 700;
 }
+.tutoring-feed-price-label {
+  margin-bottom: 4rpx;
+  font-size: 22rpx;
+  color: #999;
+}
 .tutoring-feed-action {
   font-size: 24rpx;
   color: #2d8cf0;
@@ -535,7 +726,7 @@ page { height: 100%; background-color: #f5f5f5; }
 }
 .load-more { padding: 30rpx; text-align: center; font-size: 28rpx; color: #999; }
 
-.teacher-booking-page { height: 100%; display: flex; flex-direction: column; }
+.teacher-workbench-page { height: 100%; display: flex; flex-direction: column; }
 .teacher-head { padding: 24rpx 28rpx 12rpx; background: #fff; }
 .teacher-title { font-size: 34rpx; color: #222; font-weight: 600; display: block; }
 .teacher-sub { font-size: 24rpx; color: #999; margin-top: 8rpx; display: block; }
@@ -555,4 +746,21 @@ page { height: 100%; background-color: #f5f5f5; }
 .btn { min-width: 120rpx; border-radius: 28rpx; }
 .btn.reject { background: #fff1f0; color: #f5222d; border: 1rpx solid #f5222d; }
 .btn.approve { background: #2d8cf0; color: #fff; }
+
+.workbench-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18rpx; padding: 18rpx; background: #fff; }
+.workbench-card { display: flex; flex-direction: column; justify-content: center; min-height: 112rpx; padding: 18rpx; border-radius: 16rpx; background: #f7f8fb; border: 2rpx solid transparent; }
+.workbench-card.primary { background: linear-gradient(135deg, #fff4d6, #ffe6a3); }
+.workbench-card.active { border-color: #2d8cf0; background: #eef6ff; }
+.workbench-card-title { font-size: 28rpx; color: #222; font-weight: 700; }
+.workbench-card-sub { margin-top: 8rpx; font-size: 22rpx; color: #888; line-height: 1.4; }
+.teacher-section { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.section-title { padding: 20rpx 28rpx 8rpx; background: #fff; font-size: 30rpx; font-weight: 700; color: #222; }
+.teacher-post-list { flex: 1; padding: 20rpx; }
+.post-card { background: #fff; border-radius: 14rpx; padding: 22rpx; margin-bottom: 20rpx; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.04); }
+.post-title { font-size: 30rpx; font-weight: 700; color: #222; margin-bottom: 14rpx; }
+.post-status { padding: 4rpx 14rpx; border-radius: 24rpx; font-size: 22rpx; }
+.post-status.approved { background: #f6ffed; color: #52c41a; }
+.post-status.rejected { background: #fff1f0; color: #f5222d; }
+.empty-state.compact { padding-top: 80rpx; }
+.btn.plain { background: #f5f5f5; color: #333; }
 </style>

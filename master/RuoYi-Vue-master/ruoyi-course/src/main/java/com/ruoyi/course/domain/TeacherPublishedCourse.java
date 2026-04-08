@@ -25,6 +25,8 @@ public class TeacherPublishedCourse
     private String gradeName;
     private String education;
     private String university;
+    private String keyword;
+    private Long bookingCount;
 
     public String getPublishId()
     {
@@ -194,5 +196,25 @@ public class TeacherPublishedCourse
     public void setUniversity(String university)
     {
         this.university = university;
+    }
+
+    public String getKeyword()
+    {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword)
+    {
+        this.keyword = keyword;
+    }
+
+    public Long getBookingCount()
+    {
+        return bookingCount;
+    }
+
+    public void setBookingCount(Long bookingCount)
+    {
+        this.bookingCount = bookingCount;
     }
 }

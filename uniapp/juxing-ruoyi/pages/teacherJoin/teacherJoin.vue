@@ -265,11 +265,11 @@
 							this.approvedTipShown = true
 							uni.showModal({
 								title: '已入驻成功',
-								content: '您的老师入驻已审核通过，可以直接去上架课程。',
-								confirmText: '去发布',
+								content: '您的老师入驻已审核通过，可以进入老师工作台管理家教信息和预约。',
+								confirmText: '去工作台',
 								success: (r) => {
 									if (r.confirm) {
-										uni.navigateTo({ url: '/pages/coursePublish/coursePublish' })
+										uni.switchTab({ url: '/pages/findteacher/findteacher/findteacher' })
 									}
 								}
 							})

@@ -134,20 +134,6 @@
 	  }
 	},
 	{
-		"path" : "pages/mine/card/card/card",
-		"style" : 
-		{
-			"navigationBarTitleText" : "我的会员卡"
-		}
-	},
-	{
-		"path" : "pages/mine/card/card/addCard/addCard",
-		"style" : 
-		{
-			"navigationBarTitleText" : "会员卡"
-		}
-	},
-	{
 		"path" : "pages/findteacher/findteacher/teacherDetail/teacherDetail",
 		"style" : 
 		{
@@ -184,13 +170,6 @@
 	},
 	{
 		"path" : "pages/product/productDetail/order/order",
-		"style" : 
-		{
-			"navigationBarTitleText" : "确认购买"
-		}
-	},
-	{
-		"path" : "pages/mine/card/card/addCard/addCardOrder",
 		"style" : 
 		{
 			"navigationBarTitleText" : "确认购买"

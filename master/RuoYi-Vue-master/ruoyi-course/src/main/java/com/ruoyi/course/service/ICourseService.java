@@ -45,6 +45,12 @@ public interface ICourseService
 
     public TeacherPublishedCourse selectTeacherPublishedCourseById(String publishId);
 
+    public int updateTeacherPublishedCourse(TeacherPublishedCourse course);
+
+    public int updateTeacherPublishedCourseStatus(TeacherPublishedCourse course);
+
+    public int deleteTeacherPublishedCourse(TeacherPublishedCourse course);
+
     /**
      * 修改课程管理
      * 
@@ -78,4 +84,9 @@ public interface ICourseService
      * 教师端：处理预约（1同意/2拒绝）
      */
     public int teacherDecideBooking(String teacherId, String courseId, Long status);
+
+    /**
+     * 学生端：待确认时取消，已确认时申请取消。
+     */
+    public int studentCancelBooking(String studentId, String courseId, String cancelReason);
 }

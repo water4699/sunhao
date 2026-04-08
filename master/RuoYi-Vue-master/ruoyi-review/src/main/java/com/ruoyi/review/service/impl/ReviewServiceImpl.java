@@ -158,10 +158,28 @@ public class ReviewServiceImpl implements IReviewService {
         row.setTeacherId(tid);
         row.setBookingId(review.getBookingId());
         row.setRating(String.valueOf(score));
-        row.setComment(StringUtils.isEmpty(review.getComment()) ? "" : review.getComment().trim());
+        row.setComment(sanitizeComment(review.getComment()));
         row.setStatus("1");
         row.setCreatedAt(new Date());
         return reviewMapper.insertReview(row);
+    }
+
+    private String sanitizeComment(String raw) {
+        if (StringUtils.isEmpty(raw)) {
+            return "";
+        }
+        String text = raw.trim().replaceAll("<[^>]*>", "").replaceAll("[\r\n\t]+", " ").trim();
+        if (text.length() > 300) {
+            throw new ServiceException("评价内容不能超过300字");
+        }
+        String lower = text.toLowerCase();
+        String[] blocked = {"script", "onerror", "onclick", "赌博", "诈骗", "刷单", "广告"};
+        for (String word : blocked) {
+            if (lower.contains(word.toLowerCase())) {
+                throw new ServiceException("评价内容包含不合规信息，请修改后提交");
+            }
+        }
+        return text;
     }
 
     /**

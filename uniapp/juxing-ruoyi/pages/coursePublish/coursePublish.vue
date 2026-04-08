@@ -5,7 +5,7 @@
       <text class="back-text">返回</text>
     </view>
     <view class="card">
-      <view class="title">发布家教信息</view>
+      <view class="title">{{ publishId ? '编辑家教信息' : '发布家教信息' }}</view>
 
       <view class="form-item">
         <text class="label">可开始授课日期</text>
@@ -43,13 +43,13 @@
         <textarea v-model="form.address" class="textarea" maxlength="200" placeholder="请输入擅长方向、授课方式或地址说明"></textarea>
       </view>
 
-      <button class="submit" @click="submit">发布家教信息</button>
+      <button class="submit" @click="submit">{{ publishId ? '保存家教信息' : '发布家教信息' }}</button>
     </view>
   </view>
 </template>
 
 <script>
-import { publishTeacherCourse } from '@/api/course/course'
+import { publishTeacherCourse, getPublishedCourseDetail, updateMyPublishedCourse } from '@/api/course/course'
 import { findAllSubject } from '@/api/teacher/subject'
 import { findAllGrade } from '@/api/teacher/grade'
 import { getTeacherJoinStatus } from '@/api/teacherJoin/teacherJoin'
@@ -70,7 +70,8 @@ export default {
       subjectRows: [],
       gradeRows: [],
       selectedSubject: '',
-      selectedGrade: ''
+      selectedGrade: '',
+      publishId: ''
     }
   },
   computed: {
@@ -81,23 +82,25 @@ export default {
       return this.gradeRows.map(i => i.name)
     }
   },
-  async onLoad() {
+  async onLoad(options = {}) {
     const pages = getCurrentPages()
     const current = pages && pages.length ? pages[pages.length - 1] : null
     this._fromTab = !!(current && current.options && current.options.from === 'tab')
+    this.publishId = options && options.publishId ? String(options.publishId) : ''
     const now = new Date()
     this.startDate = this.formatDate(now)
     this.endDate = this.formatDate(new Date(now.getTime() + 180 * 24 * 3600 * 1000))
     const ok = await this.checkTeacherApproved()
     if (!ok) return
-    this.loadOptions()
+    await this.loadOptions()
+    if (this.publishId) await this.loadForEdit()
   },
   onShow() {
     try {
       const roles = (this.$store && this.$store.getters && this.$store.getters.roles) || []
       uni.setTabBarItem({
         index: 1,
-        text: roles.includes('teacher') ? '预约管理' : '找老师'
+        text: roles.includes('teacher') ? '工作台' : '找老师'
       })
     } catch (e) {}
   },
@@ -111,7 +114,7 @@ export default {
       if (pages && pages.length > 1) {
         const prev = ((pages[pages.length - 2] || {}).route || '')
         if (prev.indexOf('pages/findteacher/findteacher/findteacher') === 0) {
-          uni.switchTab({ url: '/pages/index/index' })
+          uni.switchTab({ url: '/pages/findteacher/findteacher/findteacher' })
           return
         }
         uni.navigateBack()
@@ -157,6 +160,24 @@ export default {
         this.gradeRows = g.data || []
       } catch (e) {}
     },
+    async loadForEdit() {
+      try {
+        const res = await getPublishedCourseDetail(this.publishId)
+        const row = res.data || {}
+        this.form.startDate = row.startDate ? String(row.startDate).split('T')[0] : ''
+        this.form.subjectId = row.subjectId != null ? String(row.subjectId) : ''
+        this.form.gradeId = row.gradeId != null ? String(row.gradeId) : ''
+        this.form.hourlyRate = row.hourlyRate != null ? String(row.hourlyRate) : ''
+        this.form.expectedHours = row.expectedHours != null ? String(row.expectedHours) : '1'
+        this.form.address = row.address || ''
+        const subject = this.subjectRows.find(i => String(i.subjectId) === this.form.subjectId)
+        const grade = this.gradeRows.find(i => String(i.gradeId) === this.form.gradeId)
+        this.selectedSubject = subject ? subject.name : ''
+        this.selectedGrade = grade ? grade.name : ''
+      } catch (e) {
+        uni.showToast({ title: '加载家教信息失败', icon: 'none' })
+      }
+    },
     onDateChange(e) {
       this.form.startDate = e.detail.value
     },
@@ -185,18 +206,20 @@ export default {
         uni.showToast({ title: '请输入家教说明或地址', icon: 'none' })
         return
       }
-      uni.showLoading({ title: '发布中...' })
-      publishTeacherCourse(this.form).then(res => {
+      const isEdit = !!this.publishId
+      uni.showLoading({ title: isEdit ? '保存中...' : '发布中...' })
+      const request = isEdit ? updateMyPublishedCourse(this.publishId, this.form) : publishTeacherCourse(this.form)
+      request.then(res => {
         uni.hideLoading()
         if (res.code === 200) {
           uni.showModal({
-            title: '发布成功',
-            content: '家教信息已发布成功。',
+            title: isEdit ? '保存成功' : '发布成功',
+            content: isEdit ? '家教信息已更新。' : '家教信息已发布成功。',
             showCancel: false,
-            success: () => uni.switchTab({ url: '/pages/index/index' })
+            success: () => uni.switchTab({ url: '/pages/findteacher/findteacher/findteacher' })
           })
         } else {
-          uni.showToast({ title: res.msg || '发布失败', icon: 'none' })
+          uni.showToast({ title: res.msg || (isEdit ? '保存失败' : '发布失败'), icon: 'none' })
         }
       }).catch(() => {
         uni.hideLoading()
