@@ -7,9 +7,9 @@
       </view>
 
       <view class="workbench-grid">
-        <view class="workbench-card" @click="goTeacherJoin">
-          <text class="workbench-card-title">入驻状态</text>
-          <text class="workbench-card-sub">查看或完善入驻资料</text>
+        <view :class="['workbench-card', teacherWorkMode === 'demand' ? 'active' : '']" @click="switchTeacherWorkMode('demand')">
+          <text class="workbench-card-title">接单信息</text>
+          <text class="workbench-card-sub">查看家长需求并提交接单</text>
         </view>
         <view class="workbench-card primary" @click="goPublishTutorPost">
           <text class="workbench-card-title">发布家教信息</text>
@@ -23,13 +23,38 @@
           <text class="workbench-card-title">预约管理</text>
           <text class="workbench-card-sub">处理学生预约和取消</text>
         </view>
-        <view class="workbench-card" @click="goReviewList">
-          <text class="workbench-card-title">学生评价</text>
-          <text class="workbench-card-sub">查看家长/学生评价</text>
-        </view>
       </view>
 
-      <view v-if="teacherWorkMode === 'booking'" class="teacher-section">
+      <view v-if="teacherWorkMode === 'demand'" class="teacher-section">
+        <view class="section-title">接单信息</view>
+        <scroll-view class="teacher-booking-list" scroll-y @scrolltolower="loadMoreTeacherDemands">
+          <view v-if="teacherDemandList.length === 0 && teacherDemandLoadStatus !== 'loading'" class="empty-state compact">
+            <text class="empty-text">暂无可接需求</text>
+            <text class="empty-hint">家长发布「找家教需求」后会出现在这里。</text>
+          </view>
+          <view v-else>
+            <view class="booking-card" v-for="item in teacherDemandList" :key="'d_' + item.requestId">
+              <view class="booking-row between">
+                <text class="booking-no">需求单：{{ item.requestId }}</text>
+                <text class="booking-status pending">待接单</text>
+              </view>
+              <view class="booking-row">科目：{{ item.subjectName || '-' }}</view>
+              <view class="booking-row">年级：{{ item.gradeName || '-' }}</view>
+              <view class="booking-row">地区：{{ item.areaName || '-' }}</view>
+              <view class="booking-row">预算：¥{{ item.budgetMin || 0 }} - ¥{{ item.budgetMax || 0 }}/课时</view>
+              <view class="booking-row">时段：{{ item.preferredTime || '待沟通' }}</view>
+              <view class="booking-row">需求：{{ item.demandDesc || '-' }}</view>
+              <view class="booking-actions">
+                <button class="btn approve" size="mini" @click="submitBid(item)">我要接单</button>
+              </view>
+            </view>
+            <view v-if="teacherDemandLoadStatus === 'loading'" class="load-more">加载中...</view>
+            <view v-if="teacherDemandLoadStatus === 'nomore' && teacherDemandList.length > 0" class="load-more">没有更多了</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view v-else-if="teacherWorkMode === 'booking'" class="teacher-section">
         <view class="section-title">预约管理</view>
         <view class="teacher-status-tabs">
           <view
@@ -124,6 +149,10 @@
           :class="['student-switch-item', studentViewMode === 'tutoring' ? 'active' : '']"
           @click="switchStudentView('tutoring')"
         >家教信息</view>
+        <view
+          :class="['student-switch-item', studentViewMode === 'demand' ? 'active' : '']"
+          @click="switchStudentView('demand')"
+        >找家教需求</view>
       </view>
 
       <view class="search-container">
@@ -153,10 +182,15 @@
         </view>
       </view>
 
+      <view v-if="studentViewMode === 'demand'" class="demand-actions">
+        <button class="btn plain" size="mini" @click="goCreateDemand">发布需求</button>
+        <button class="btn approve" size="mini" @click="goMyDemands">我的需求</button>
+      </view>
+
       <scroll-view class="teacher-list" scroll-y @scrolltolower="loadMore">
         <view v-if="teacherList.length === 0 && loadStatus !== 'loading'" class="empty-state">
           <text class="empty-text">{{ studentViewMode === 'teacher' ? '未找到符合条件的老师' : '暂无匹配的家教信息' }}</text>
-          <text class="empty-hint">{{ studentViewMode === 'teacher' ? '已审核通过的老师会显示在老师库，可按地区、年级、科目筛选。' : '老师发布的家教信息会显示在这里，学生可直接点击预约。' }}</text>
+          <text class="empty-hint">{{ studentViewMode === 'teacher' ? '已审核通过的老师会显示在老师库，可按地区、年级、科目筛选。' : (studentViewMode === 'tutoring' ? '老师发布的家教信息会显示在这里，家长可直接点击预约。' : '家长发布找家教需求后，老师可在工作台接单。') }}</text>
         </view>
 
         <view v-else>
@@ -187,7 +221,7 @@
             </view>
           </block>
 
-          <block v-else>
+          <block v-else-if="studentViewMode === 'tutoring'">
             <view
               v-for="teacher in teacherList"
               :key="teacher.publishId"
@@ -215,6 +249,28 @@
             </view>
           </block>
 
+          <block v-else>
+            <view
+              v-for="item in teacherList"
+              :key="item.requestId"
+              class="tutoring-feed-card"
+            >
+              <view class="tutoring-feed-head">
+                <view class="tutoring-feed-badge">需求单</view>
+                <text class="tutoring-feed-no">编号 {{ item.requestId }}</text>
+              </view>
+              <view class="tutoring-feed-title">{{ (item.gradeName || '') + (item.subjectName || '') + '家教需求' }}</view>
+              <view class="tutoring-feed-line">地区：{{ item.areaName || '-' }}</view>
+              <view class="tutoring-feed-line">预算：¥{{ item.budgetMin || 0 }} - ¥{{ item.budgetMax || 0 }}/课时</view>
+              <view class="tutoring-feed-line">时段：{{ item.preferredTime || '待沟通' }}</view>
+              <view class="tutoring-feed-line">说明：{{ item.demandDesc || '-' }}</view>
+              <view class="tutoring-feed-footer">
+                <view class="tutoring-feed-price-label">发布者：{{ item.parentName || '家长' }}</view>
+                <text class="tutoring-feed-action">老师可在工作台接单</text>
+              </view>
+            </view>
+          </block>
+
           <view v-if="loadStatus === 'loading'" class="load-more"><text>加载中...</text></view>
           <view v-if="loadStatus === 'nomore' && teacherList.length > 0" class="load-more"><text>没有更多了</text></view>
         </view>
@@ -229,6 +285,7 @@ import { findAllGrade } from '@/api/teacher/grade'
 import { findAllSubject } from '@/api/teacher/subject'
 import { getTeacherMag } from '@/api/teacher/getTeacherMag'
 import { listPublishedCourses, listTeacherBookings, decideTeacherBooking, listMyPublishedCourses, updateMyPublishedCourseStatus, deleteMyPublishedCourse } from '@/api/course/course'
+import { listOpenTutorRequests, bidTutorRequest } from '@/api/tutorRequest/tutorRequest'
 import { baseUrl } from '../../../config'
 
 export default {
@@ -262,7 +319,12 @@ export default {
       teacherTotal: 0,
       teacherLoadStatus: 'loadmore',
       teacherRequestSeq: 0,
-      teacherWorkMode: 'booking',
+      teacherWorkMode: 'demand',
+      teacherDemandList: [],
+      teacherDemandPage: 1,
+      teacherDemandTotal: 0,
+      teacherDemandLoadStatus: 'loadmore',
+      teacherDemandRequestSeq: 0,
       myPublishedPosts: [],
       postPage: 1,
       postTotal: 0,
@@ -278,7 +340,9 @@ export default {
       return this.roles.includes('teacher')
     },
     searchPlaceholder() {
-      return this.studentViewMode === 'teacher' ? '请输入老师姓名' : '请输入家教信息关键词'
+      if (this.studentViewMode === 'teacher') return '请输入老师姓名'
+      if (this.studentViewMode === 'tutoring') return '请输入家教信息关键词'
+      return '请输入需求关键词'
     }
   },
   mounted() {
@@ -290,7 +354,8 @@ export default {
     } catch (e) {}
     if (this.isTeacher) {
       if (this.teacherWorkMode === 'posts') this.refreshMyPublishedPosts()
-      else this.refreshTeacherBookings()
+      else if (this.teacherWorkMode === 'booking') this.refreshTeacherBookings()
+      else this.refreshTeacherDemands()
     }
   },
   methods: {
@@ -313,14 +378,58 @@ export default {
     goPublishTutorPost() {
       uni.navigateTo({ url: '/pages/coursePublish/coursePublish' })
     },
-    goReviewList() {
-      uni.navigateTo({ url: '/pages/review/review' })
+    goCreateDemand() {
+      uni.navigateTo({ url: '/pages/tutorRequest/create' })
+    },
+    goMyDemands() {
+      uni.navigateTo({ url: '/pages/tutorRequest/my' })
     },
     switchTeacherWorkMode(mode) {
       if (this.teacherWorkMode === mode) return
       this.teacherWorkMode = mode
       if (mode === 'posts') this.refreshMyPublishedPosts()
-      else this.refreshTeacherBookings()
+      else if (mode === 'booking') this.refreshTeacherBookings()
+      else this.refreshTeacherDemands()
+    },
+    refreshTeacherDemands() {
+      this.teacherDemandPage = 1
+      this.teacherDemandList = []
+      this.teacherDemandLoadStatus = 'loadmore'
+      this.loadMoreTeacherDemands()
+    },
+    async loadMoreTeacherDemands() {
+      if (!this.isTeacher) return
+      if (this.teacherDemandLoadStatus === 'loading' || this.teacherDemandLoadStatus === 'nomore') return
+      this.teacherDemandLoadStatus = 'loading'
+      const requestSeq = ++this.teacherDemandRequestSeq
+      try {
+        const params = { pageNum: this.teacherDemandPage, pageSize: this.pageSize }
+        const res = await listOpenTutorRequests(params)
+        if (requestSeq !== this.teacherDemandRequestSeq) return
+        const rows = res.rows || []
+        if (this.teacherDemandPage === 1) this.teacherDemandList = rows
+        else this.teacherDemandList = [...this.teacherDemandList, ...rows]
+        this.teacherDemandTotal = res.total != null ? res.total : this.teacherDemandList.length
+        this.teacherDemandPage += 1
+        this.teacherDemandLoadStatus = (rows.length === 0 || this.teacherDemandList.length >= this.teacherDemandTotal) ? 'nomore' : 'loadmore'
+      } catch (e) {
+        if (requestSeq !== this.teacherDemandRequestSeq) return
+        this.teacherDemandLoadStatus = 'loadmore'
+      }
+    },
+    submitBid(item) {
+      uni.showModal({
+        title: '确认接单',
+        content: '确定对该需求提交接单吗？',
+        success: async (r) => {
+          if (!r.confirm) return
+          try {
+            await bidTutorRequest(item.requestId, {})
+            uni.showToast({ title: '已提交接单', icon: 'success' })
+            this.refreshTeacherDemands()
+          } catch (e) {}
+        }
+      })
     },
     switchStudentView(mode) {
       if (this.studentViewMode === mode) return
@@ -591,7 +700,7 @@ export default {
           if (aid) params.areaId = aid
           if (gid) params.gradeId = gid
           res = await getTeacherMag(params)
-        } else {
+        } else if (this.studentViewMode === 'tutoring') {
           params.status = 0
           if (this.searchText) {
             params.keyword = this.searchText
@@ -600,6 +709,19 @@ export default {
           if (aid) params.areaId = aid
           if (gid) params.gradeId = gid
           res = await listPublishedCourses(params)
+        } else {
+          if (sid != null) params.subjectId = sid
+          if (aid) params.areaId = aid
+          if (gid) params.gradeId = gid
+          res = await listOpenTutorRequests(params)
+          if (this.searchText) {
+            const kw = String(this.searchText).toLowerCase()
+            res.rows = (res.rows || []).filter(i => {
+              const text = `${i.demandDesc || ''}${i.parentName || ''}${i.subjectName || ''}${i.gradeName || ''}${i.areaName || ''}`.toLowerCase()
+              return text.indexOf(kw) >= 0
+            })
+            res.total = res.rows.length
+          }
         }
         const rows = res.rows || []
         if (this.page === 1) this.teacherList = rows
@@ -623,10 +745,8 @@ page { height: 100%; background-color: #f5f5f5; }
 .empty-text { color: #999; font-size: 28rpx; }
 .empty-hint { margin-top: 24rpx; padding: 0 48rpx; color: #bbb; font-size: 24rpx; line-height: 1.5; text-align: center; }
 
-.student-switch { display: flex; padding: 20rpx 20rpx 0; background: #fff; }
-.student-switch-item { flex: 1; text-align: center; padding: 18rpx 0; font-size: 28rpx; color: #666; background: #f5f5f5; }
-.student-switch-item:first-child { border-radius: 14rpx 0 0 14rpx; }
-.student-switch-item:last-child { border-radius: 0 14rpx 14rpx 0; }
+.student-switch { display: flex; gap: 10rpx; padding: 20rpx 20rpx 0; background: #fff; }
+.student-switch-item { flex: 1; text-align: center; padding: 18rpx 0; font-size: 28rpx; color: #666; background: #f5f5f5; border-radius: 14rpx; }
 .student-switch-item.active { color: #fff; background: #2d8cf0; font-weight: 600; }
 
 .search-container { padding: 20rpx; background-color: #ffffff; box-shadow: 0 2rpx 10rpx rgba(0,0,0,.05); }
@@ -636,6 +756,7 @@ page { height: 100%; background-color: #f5f5f5; }
 .search-button { position: absolute; right: 20rpx; background: #4a86e8; color: white; padding: 8rpx 20rpx; border-radius: 30rpx; font-size: 26rpx; }
 
 .filter-bar { display: flex; justify-content: space-between; padding: 20rpx; background-color: #ffffff; margin-bottom: 20rpx; }
+.demand-actions { display: flex; justify-content: flex-end; gap: 12rpx; padding: 8rpx 20rpx 14rpx; background: #fff; }
 .filter-group { flex: 1; margin: 0 10rpx; position: relative; }
 .filter-header { display: flex; align-items: center; justify-content: space-between; padding: 16rpx; background-color: #f9f9f9; border-radius: 12rpx; font-size: 28rpx; color: #333; }
 .filter-value { color: #666; }

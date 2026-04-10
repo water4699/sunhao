@@ -38,12 +38,17 @@ public class UsersAuthServiceImpl implements IUsersAuthService
         String phone = body.getPhone();
         if (StringUtils.isEmpty(body.getRegisterRole()))
         {
-            return "请选择注册身份：学生(student)、家长(parent) 或 教师(teacher)";
+            return "请选择注册身份：家长(parent) 或 教师(teacher)";
         }
         String roleKey = body.getRegisterRole().trim().toLowerCase();
-        if (!"student".equals(roleKey) && !"parent".equals(roleKey) && !"teacher".equals(roleKey))
+        // 兼容旧端 student：统一归并为 parent
+        if ("student".equals(roleKey))
         {
-            return "注册身份仅支持学生(student)、家长(parent) 或 教师(teacher)；学生与家长同属选课/约课侧";
+            roleKey = "parent";
+        }
+        if (!"parent".equals(roleKey) && !"teacher".equals(roleKey))
+        {
+            return "注册身份仅支持家长(parent) 或 教师(teacher)";
         }
         if (StringUtils.isEmpty(username))
         {
@@ -91,7 +96,7 @@ public class UsersAuthServiceImpl implements IUsersAuthService
         {
             return "注册失败,请联系系统管理人员";
         }
-        if ("student".equals(roleKey) || "parent".equals(roleKey))
+        if ("parent".equals(roleKey))
         {
             Student s = new Student();
             s.setUserId(row.getUsersId());

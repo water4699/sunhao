@@ -56,11 +56,10 @@
         globalConfig: getApp().globalData.config,
         registerRoleIndex: 0,
         roleLabels: [
-          '我是学生（选课约课）',
-          '我是家长（代选课/约课，与学生同侧）',
-          '我是教师（入驻接单）'
+          '我是学生',
+          '我是家长'
         ],
-        roleValues: ['student', 'parent', 'teacher'],
+        roleValues: ['student', 'parent'],
         registerForm: {
           username: "",
           password: "",

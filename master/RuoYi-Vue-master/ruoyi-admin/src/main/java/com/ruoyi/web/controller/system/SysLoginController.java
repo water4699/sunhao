@@ -86,7 +86,9 @@ public class SysLoginController
             Set<String> roles = new HashSet<>();
             if (StringUtils.isNotEmpty(loginUser.getBusinessUsersType()))
             {
-                roles.add(loginUser.getBusinessUsersType());
+                String type = loginUser.getBusinessUsersType().trim().toLowerCase();
+                // 过渡兼容：历史 student 账号统一映射到 parent 侧能力
+                roles.add("student".equals(type) ? "parent" : type);
             }
             AjaxResult ajax = AjaxResult.success();
             ajax.put("user", user);

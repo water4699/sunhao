@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mapper namespace="com.ruoyi.course.mapper.TutorRequestMapper">
+
+    <resultMap type="TutorRequest" id="TutorRequestResult">
+        <result property="requestId" column="request_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="subjectId" column="subject_id"/>
+        <result property="gradeId" column="grade_id"/>
+        <result property="areaId" column="area_id"/>
+        <result property="budgetMin" column="budget_min"/>
+        <result property="budgetMax" column="budget_max"/>
+        <result property="contactInfo" column="contact_info"/>
+        <result property="demandDesc" column="demand_desc"/>
+        <result property="teachMode" column="teach_mode"/>
+        <result property="preferredTime" column="preferred_time"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="parentName" column="parent_name"/>
+        <result property="subjectName" column="subject_name"/>
+        <result property="gradeName" column="grade_name"/>
+        <result property="areaName" column="area_name"/>
+    </resultMap>
+
+    <resultMap type="TutorRequestBid" id="TutorRequestBidResult">
+        <result property="bidId" column="bid_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="message" column="message"/>
+        <result property="expectedRate" column="expected_rate"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="teacherImage" column="teacher_image"/>
+        <result property="teacherEducation" column="teacher_education"/>
+        <result property="teacherUniversity" column="teacher_university"/>
+        <result property="requestUserId" column="request_user_id"/>
+    </resultMap>
+
+    <sql id="selectTutorRequestVo">
+        select r.request_id, r.user_id, r.subject_id, r.grade_id, r.area_id,
+               r.budget_min, r.budget_max, r.contact_info, r.demand_desc,
+               r.teach_mode, r.preferred_time, r.status, r.created_at,
+               u.usersname as parent_name,
+               s.name as subject_name,
+               g.name as grade_name,
+               a.name as area_name
+          from tutor_request r
+          left join users u on u.users_id = r.user_id
+          left join subject s on s.subject_id = r.subject_id
+          left join grade_level g on g.grade_id = r.grade_id
+          left join area_jinan a on a.area_id = r.area_id
+    </sql>
+
+    <insert id="insertTutorRequest" parameterType="TutorRequest" useGeneratedKeys="true" keyProperty="requestId">
+        insert into tutor_request
+        (user_id, subject_id, grade_id, area_id, budget_min, budget_max, contact_info, demand_desc, teach_mode, preferred_time, status, created_at)
+        values
+        (#{userId}, #{subjectId}, #{gradeId}, #{areaId}, #{budgetMin}, #{budgetMax}, #{contactInfo}, #{demandDesc}, #{teachMode}, #{preferredTime}, #{status}, #{createdAt})
+    </insert>
+
+    <select id="selectTutorRequestList" parameterType="TutorRequest" resultMap="TutorRequestResult">
+        <include refid="selectTutorRequestVo"/>
+        <where>
+            <if test="userId != null and userId != ''">and r.user_id = #{userId}</if>
+            <if test="status != null">and r.status = #{status}</if>
+            <if test="subjectId != null and subjectId != ''">and r.subject_id = #{subjectId}</if>
+            <if test="gradeId != null and gradeId != ''">and r.grade_id = #{gradeId}</if>
+            <if test="areaId != null and areaId != ''">and r.area_id = #{areaId}</if>
+        </where>
+        order by
+          case when r.status = 0 then 3 when r.status = 1 then 2 else 1 end desc,
+          r.created_at desc,
+          r.request_id desc
+    </select>
+
+    <select id="selectTutorRequestById" resultMap="TutorRequestResult">
+        <include refid="selectTutorRequestVo"/>
+        where r.request_id = #{requestId}
+    </select>
+
+    <update id="updateTutorRequestStatusByOwner">
+        update tutor_request
+           set status = #{status}
+         where request_id = #{requestId}
+           and user_id = #{userId}
+    </update>
+
+    <insert id="insertTutorRequestBid" parameterType="TutorRequestBid" useGeneratedKeys="true" keyProperty="bidId">
+        insert into tutor_request_bid
+        (request_id, teacher_id, message, expected_rate, status, created_at)
+        values
+        (#{requestId}, #{teacherId}, #{message}, #{expectedRate}, #{status}, #{createdAt})
+    </insert>
+
+    <select id="selectTutorRequestBidById" resultMap="TutorRequestBidResult">
+        select b.bid_id, b.request_id, b.teacher_id, b.message, b.expected_rate, b.status, b.created_at,
+               t.real_name as teacher_name, t.image as teacher_image, t.education as teacher_education, t.university as teacher_university,
+               r.user_id as request_user_id
+          from tutor_request_bid b
+          left join teacher t on t.teacher_id = b.teacher_id
+          left join tutor_request r on r.request_id = b.request_id
+         where b.bid_id = #{bidId}
+         limit 1
+    </select>
+
+    <select id="selectTutorRequestBidList" resultMap="TutorRequestBidResult">
+        select b.bid_id, b.request_id, b.teacher_id, b.message, b.expected_rate, b.status, b.created_at,
+               t.real_name as teacher_name, t.image as teacher_image, t.education as teacher_education, t.university as teacher_university,
+               r.user_id as request_user_id
+          from tutor_request_bid b
+          left join teacher t on t.teacher_id = b.teacher_id
+          left join tutor_request r on r.request_id = b.request_id
+         where b.request_id = #{requestId}
+         order by case when b.status = 0 then 2 when b.status = 1 then 1 else 0 end desc, b.created_at desc, b.bid_id desc
+    </select>
+
+    <select id="countActiveBidByTeacher" resultType="int">
+        select count(*)
+          from tutor_request_bid
+         where request_id = #{requestId}
+           and teacher_id = #{teacherId}
+           and status in (0, 1)
+    </select>
+
+    <update id="updateTutorRequestBidStatus">
+        update tutor_request_bid
+           set status = #{status}
+         where bid_id = #{bidId}
+    </update>
+
+    <update id="updateTutorRequestBidStatusByRequest">
+        update tutor_request_bid
+           set status = #{status}
+         where request_id = #{requestId}
+           and status = 0
+    </update>
+
+    <select id="selectMyBidList" resultMap="TutorRequestBidResult">
+        select b.bid_id, b.request_id, b.teacher_id, b.message, b.expected_rate, b.status, b.created_at,
+               t.real_name as teacher_name, t.image as teacher_image, t.education as teacher_education, t.university as teacher_university,
+               r.user_id as request_user_id
+          from tutor_request_bid b
+          left join teacher t on t.teacher_id = b.teacher_id
+          left join tutor_request r on r.request_id = b.request_id
+         where b.teacher_id = #{teacherId}
+         order by b.created_at desc, b.bid_id desc
+    </select>
+
+</mapper>

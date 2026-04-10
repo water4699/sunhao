@@ -107,7 +107,7 @@ public class SysRegisterService
     /**
      * 解析注册要绑定的角色 ID。
      * registerRole 为空：绑定 common（普通角色，默认 role_id=2）。
-     * student / parent / teacher：查库绑定；不存在时返回错误提示执行 SQL。
+     * parent / teacher：查库绑定；不存在时返回错误提示执行 SQL。
      * 其它值：非法。
      *
      * @param outMsg 非法或缺角色时写入原因
@@ -136,9 +136,13 @@ public class SysRegisterService
             }
             return new Long[] { common.getRoleId() };
         }
-        if (!"student".equals(key) && !"parent".equals(key) && !"teacher".equals(key))
+        if ("student".equals(key))
         {
-            outMsg.append("注册身份无效，请使用 student、parent 或 teacher，或留空使用普通角色");
+            key = "parent";
+        }
+        if (!"parent".equals(key) && !"teacher".equals(key))
+        {
+            outMsg.append("注册身份无效，请使用 parent 或 teacher，或留空使用普通角色");
             return null;
         }
         SysRole role = roleService.selectRoleByRoleKey(key);
