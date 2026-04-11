@@ -96,10 +96,10 @@
 					<input v-model="formData.university" placeholder="请输入您的学校名称" maxlength="50" class="native-input" />
 				</view>
 
-				<!-- 薪资 -->
+				<!-- 预期时薪 -->
 				<view class="form-item">
-					<text class="label">预期薪资<text class="required">*</text></text>
-					<input v-model="formData.hourlyRate" placeholder="请输入您的预期薪资" maxlength="50" class="native-input" />
+					<text class="label">预期时薪<text class="required">*</text></text>
+					<input v-model="formData.hourlyRate" placeholder="请输入您的预期时薪" maxlength="50" class="native-input" />
 				</view>
 
 				<!-- 头像上传 -->
@@ -424,7 +424,7 @@
 					},
 					{
 						field: 'hourlyRate',
-						message: '请输入预期薪资'
+						message: '请输入预期时薪'
 					},
 					{
 						field: 'image',

@@ -42,6 +42,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="image != null  and image != ''"> and image = #{image}</if>
             <if test="creatTime != null "> and creat_time = #{creatTime}</if>
         </where>
+        order by creat_time desc, teacher_id desc
     </select>
     
     <select id="selectTeacherByTeacherId" parameterType="String" resultMap="TeacherResult">
