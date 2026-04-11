@@ -1,5 +1,7 @@
 package com.ruoyi.ai.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -20,6 +22,11 @@ public class RuoyiAiProperties
     private int connectTimeoutMs = 8000;
 
     private int readTimeoutMs = 20000;
+
+    /**
+     * 触发「推荐老师」模式的关键词（任一命中即触发）。
+     */
+    private List<String> recommendKeywords = new ArrayList<>();
 
     public boolean isEnabled()
     {
@@ -79,5 +86,15 @@ public class RuoyiAiProperties
     public void setReadTimeoutMs(int readTimeoutMs)
     {
         this.readTimeoutMs = readTimeoutMs;
+    }
+
+    public List<String> getRecommendKeywords()
+    {
+        return recommendKeywords;
+    }
+
+    public void setRecommendKeywords(List<String> recommendKeywords)
+    {
+        this.recommendKeywords = recommendKeywords;
     }
 }

@@ -1,5 +1,6 @@
 package com.ruoyi.ai.service.impl;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
@@ -28,6 +29,10 @@ import com.ruoyi.teacher.service.ITeacherService;
 public class AiTutorServiceImpl implements IAiTutorService
 {
     private static final Logger log = LoggerFactory.getLogger(AiTutorServiceImpl.class);
+    private static final List<String> DEFAULT_RECOMMEND_KEYWORDS = Arrays.asList(
+        "推荐老师", "推荐教师", "找老师", "找家教", "选老师", "选教师", "家教", "预约", "上课", "辅导",
+        "teacher", "tutor", "recommend"
+    );
 
     @Autowired
     private ITeacherService teacherService;
@@ -42,7 +47,8 @@ public class AiTutorServiceImpl implements IAiTutorService
     public AiAssistantResponse assistant(AiAssistantRequest request)
     {
         AiAssistantResponse res = new AiAssistantResponse();
-        List<Teacher> teachers = selectRecommendedTeachers(request);
+        boolean recommendMode = shouldRecommendTeachers(request);
+        List<Teacher> teachers = recommendMode ? selectRecommendedTeachers(request) : Collections.emptyList();
         res.setTeachers(teachers == null ? Collections.emptyList() : teachers);
 
         boolean wantAi = aiProperties.isEnabled() && StringUtils.isNotEmpty(aiProperties.getApiKey());
@@ -50,18 +56,32 @@ public class AiTutorServiceImpl implements IAiTutorService
         {
             res.setUsedAi(false);
             res.setSource(StringUtils.isEmpty(aiProperties.getApiKey()) ? "no_api_key" : "disabled");
-            res.setReply(buildFallbackReply(request, teachers, "当前未配置 AI 密钥，已按您的条件从系统推荐以下认证教师，可直接在「找老师」中进一步筛选。"));
+            if (recommendMode)
+            {
+                res.setReply(buildFallbackReply(request, teachers, "当前未配置 AI 密钥，已按您的条件从系统推荐以下认证教师，可直接在「找老师」中进一步筛选。"));
+            }
+            else
+            {
+                res.setReply("当前未配置 AI 密钥，暂无法进行智能问答。请稍后重试。");
+            }
             return res;
         }
 
         try
         {
-            String aiText = callChatCompletions(request);
+            String aiText = callChatCompletions(request, recommendMode, teachers);
             if (StringUtils.isNotEmpty(aiText))
             {
                 res.setUsedAi(true);
                 res.setSource(resolveAiSource());
-                res.setReply(aiText.trim() + "\n\n（以下为平台内符合条件的教师，您可直接查看详情并预约）");
+                if (recommendMode)
+                {
+                    res.setReply(aiText.trim() + "\n\n（以下为平台内符合条件的教师，您可直接查看详情并预约）");
+                }
+                else
+                {
+                    res.setReply(aiText.trim());
+                }
                 return res;
             }
         }
@@ -76,7 +96,14 @@ public class AiTutorServiceImpl implements IAiTutorService
 
         res.setUsedAi(false);
         res.setSource("fallback");
-        res.setReply(buildFallbackReply(request, teachers, "智能助手暂时不可用，已按条件为您推荐以下认证教师。"));
+        if (recommendMode)
+        {
+            res.setReply(buildFallbackReply(request, teachers, "智能助手暂时不可用，已按条件为您推荐以下认证教师。"));
+        }
+        else
+        {
+            res.setReply("智能助手暂时不可用，请稍后再试。");
+        }
         return res;
     }
 
@@ -133,25 +160,38 @@ public class AiTutorServiceImpl implements IAiTutorService
         return sb.toString();
     }
 
-    private String callChatCompletions(AiAssistantRequest request)
+    private String callChatCompletions(AiAssistantRequest request, boolean recommendMode, List<Teacher> teachers)
     {
-        List<Teacher> teachers = selectRecommendedTeachers(request);
         String userMsg = StringUtils.isNotEmpty(request.getMessage()) ? request.getMessage() : "请根据我的筛选条件给出家教选择建议。";
         String ctx = String.format("科目ID=%s，地区ID=%s，年级ID=%s。",
             request.getSubjectId() != null ? request.getSubjectId() : "不限",
             StringUtils.isNotEmpty(request.getAreaId()) ? request.getAreaId() : "不限",
             StringUtils.isNotEmpty(request.getGradeId()) ? request.getGradeId() : "不限");
-        String teacherCtx = buildTeacherContext(teachers);
+        String teacherCtx = recommendMode ? buildTeacherContext(teachers) : "";
 
         JSONObject body = new JSONObject();
         body.put("model", aiProperties.getModel());
         JSONArray messages = new JSONArray();
         JSONObject sys = new JSONObject();
         sys.put("role", "system");
-        sys.put("content", "你是「聚星教育」家教平台的中文助理。你必须基于平台提供的候选教师信息给出选课和选老师建议，不能编造平台里不存在的老师。输出使用简洁中文，控制在220字内，优先包含：1. 学习问题判断；2. 选老师标准；3. 若有候选教师，点名1到3位并说明匹配原因。");
+        if (recommendMode)
+        {
+            sys.put("content", "你是「聚星教育」家教平台的中文助理。你必须基于平台提供的候选教师信息给出选课和选老师建议，不能编造平台里不存在的老师。输出使用简洁中文，控制在220字内，优先包含：1. 学习问题判断；2. 选老师标准；3. 若有候选教师，点名1到3位并说明匹配原因。");
+        }
+        else
+        {
+            sys.put("content", "你是「聚星教育」平台的中文智能助手。请直接回答用户问题，给出清晰、可执行建议。不要强行推荐老师，不要虚构平台数据。输出控制在220字内。");
+        }
         JSONObject usr = new JSONObject();
         usr.put("role", "user");
-        usr.put("content", ctx + "\n平台候选教师：\n" + teacherCtx + "\n用户说：" + userMsg);
+        if (recommendMode)
+        {
+            usr.put("content", ctx + "\n平台候选教师：\n" + teacherCtx + "\n用户说：" + userMsg);
+        }
+        else
+        {
+            usr.put("content", "用户说：" + userMsg + "\n（如与筛选有关可参考：" + ctx + "）");
+        }
         messages.add(sys);
         messages.add(usr);
         body.put("messages", messages);
@@ -211,5 +251,35 @@ public class AiTutorServiceImpl implements IAiTutorService
             return "deepseek";
         }
         return "llm";
+    }
+
+    private boolean shouldRecommendTeachers(AiAssistantRequest request)
+    {
+        if (request == null)
+        {
+            return false;
+        }
+        String rawMessage = StringUtils.trimToEmpty(request.getMessage());
+        if (StringUtils.isEmpty(rawMessage))
+        {
+            return request.getSubjectId() != null
+                || StringUtils.isNotEmpty(request.getAreaId())
+                || StringUtils.isNotEmpty(request.getGradeId());
+        }
+        String msg = rawMessage.toLowerCase();
+        List<String> recommendKeywords = aiProperties.getRecommendKeywords();
+        if (recommendKeywords == null || recommendKeywords.isEmpty())
+        {
+            recommendKeywords = DEFAULT_RECOMMEND_KEYWORDS;
+        }
+        for (String k : recommendKeywords)
+        {
+            String keyword = StringUtils.trimToEmpty(k).toLowerCase();
+            if (StringUtils.isNotEmpty(keyword) && msg.contains(keyword))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

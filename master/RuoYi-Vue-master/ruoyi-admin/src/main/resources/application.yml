@@ -18,6 +18,20 @@ ruoyi:
     api-url: ${RUOYI_AI_API_URL:https://api.deepseek.com/chat/completions}
     api-key: ${RUOYI_AI_API_KEY:sk-d285ba42a52a4b1c9c2eaedfecc07f5d}
     model: ${RUOYI_AI_MODEL:deepseek-chat}
+    recommend-keywords:
+      - 推荐老师
+      - 推荐教师
+      - 找老师
+      - 找家教
+      - 选老师
+      - 选教师
+      - 家教
+      - 预约
+      - 上课
+      - 辅导
+      - teacher
+      - tutor
+      - recommend
     connect-timeout-ms: 8000
     read-timeout-ms: 20000
 
