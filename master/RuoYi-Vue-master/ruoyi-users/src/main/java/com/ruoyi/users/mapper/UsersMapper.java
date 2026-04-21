@@ -17,6 +17,31 @@ public interface UsersMapper
     public Users selectUsersByUsersId(String usersId);
 
     /**
+     * 按主键查询（含 password，用于改密等）
+     */
+    public Users selectUsersByUsersIdForAuth(String usersId);
+
+    /**
+     * 按登录名查询（含 password，用于认证）
+     */
+    public Users selectUsersByUsersnameForAuth(String usersname);
+
+    /**
+     * 按手机号查询（含 password，用于认证）
+     */
+    public Users selectUsersByPhoneForAuth(String phone);
+
+    /**
+     * 统计同名用户数
+     */
+    public int countUsersByUsersname(String usersname);
+
+    /**
+     * 统计同手机号用户数
+     */
+    public int countUsersByPhone(String phone);
+
+    /**
      * 查询用户总列表
      * 
      * @param users 用户总

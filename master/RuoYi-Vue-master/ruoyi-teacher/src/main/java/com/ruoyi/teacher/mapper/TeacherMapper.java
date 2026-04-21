@@ -1,6 +1,7 @@
 package com.ruoyi.teacher.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.teacher.domain.Teacher;
 
 /**
@@ -57,4 +58,8 @@ public interface TeacherMapper
     public int deleteTeacherByTeacherIds(String[] teacherIds);
 
     String selectSubjectBySubjectId(Integer subjectid);
+
+    int countTeacherByUserId(@Param("userId") String userId);
+
+    Teacher selectTeacherByUserId(@Param("userId") String userId);
 }

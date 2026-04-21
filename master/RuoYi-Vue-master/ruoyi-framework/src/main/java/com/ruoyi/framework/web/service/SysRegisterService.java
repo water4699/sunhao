@@ -16,7 +16,9 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.framework.manager.AsyncManager;
 import com.ruoyi.framework.manager.factory.AsyncFactory;
+import com.ruoyi.common.core.domain.entity.SysRole;
 import com.ruoyi.system.service.ISysConfigService;
+import com.ruoyi.system.service.ISysRoleService;
 import com.ruoyi.system.service.ISysUserService;
 
 /**
@@ -29,6 +31,9 @@ public class SysRegisterService
 {
     @Autowired
     private ISysUserService userService;
+
+    @Autowired
+    private ISysRoleService roleService;
 
     @Autowired
     private ISysConfigService configService;
@@ -76,9 +81,16 @@ public class SysRegisterService
         }
         else
         {
+            StringBuilder roleErr = new StringBuilder();
+            Long[] roleIds = resolveRegisterRoleIds(registerBody.getRegisterRole(), roleErr);
+            if (roleIds == null)
+            {
+                return roleErr.length() > 0 ? roleErr.toString() : "注册角色解析失败";
+            }
             sysUser.setNickName(username);
             sysUser.setPwdUpdateDate(DateUtils.getNowDate());
             sysUser.setPassword(SecurityUtils.encryptPassword(password));
+            sysUser.setRoleIds(roleIds);
             boolean regFlag = userService.registerUser(sysUser);
             if (!regFlag)
             {
@@ -90,6 +102,56 @@ public class SysRegisterService
             }
         }
         return msg;
+    }
+
+    /**
+     * 解析注册要绑定的角色 ID。
+     * registerRole 为空：绑定 common（普通角色，默认 role_id=2）。
+     * parent / teacher：查库绑定；不存在时返回错误提示执行 SQL。
+     * 其它值：非法。
+     *
+     * @param outMsg 非法或缺角色时写入原因
+     * @return 角色 ID 数组，失败返回 null
+     */
+    private Long[] resolveRegisterRoleIds(String registerRole, StringBuilder outMsg)
+    {
+        if (StringUtils.isEmpty(registerRole))
+        {
+            SysRole common = roleService.selectRoleByRoleKey("common");
+            if (common == null)
+            {
+                outMsg.append("系统未配置 common 角色，请联系管理员初始化数据库");
+                return null;
+            }
+            return new Long[] { common.getRoleId() };
+        }
+        String key = registerRole.trim().toLowerCase();
+        if ("common".equals(key))
+        {
+            SysRole common = roleService.selectRoleByRoleKey("common");
+            if (common == null)
+            {
+                outMsg.append("系统未配置 common 角色，请联系管理员初始化数据库");
+                return null;
+            }
+            return new Long[] { common.getRoleId() };
+        }
+        if ("student".equals(key))
+        {
+            key = "parent";
+        }
+        if (!"parent".equals(key) && !"teacher".equals(key))
+        {
+            outMsg.append("注册身份无效，请使用 parent 或 teacher，或留空使用普通角色");
+            return null;
+        }
+        SysRole role = roleService.selectRoleByRoleKey(key);
+        if (role == null)
+        {
+            outMsg.append("系统未配置「").append(key).append("」角色，请在库中执行 docs/sql/register_roles_student_teacher.sql 后重试");
+            return null;
+        }
+        return new Long[] { role.getRoleId() };
     }
 
     /**

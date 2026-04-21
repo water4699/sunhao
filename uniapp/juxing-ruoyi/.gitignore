@@ -3,6 +3,7 @@
 
 /unpackage/*
 /node_modules/*
+/.cache/
 
 ######################################################################
 # Development Tools

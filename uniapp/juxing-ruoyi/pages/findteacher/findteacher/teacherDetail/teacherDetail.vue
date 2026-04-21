@@ -30,6 +30,14 @@
 			<view class="fee-tip">* 费用包含备课及课后答疑时间</view>
 		</view>
 
+		<view v-if="publishedInfo" class="post-box">
+			<view class="post-title">老师发布的家教信息</view>
+			<view class="post-line">{{ publishedInfo.gradeName || '' }} {{ publishedInfo.subjectName || '' }}</view>
+			<view class="post-line" v-if="publishedInfo.startDate">可开始授课：{{ formatDate(publishedInfo.startDate) }}</view>
+			<view class="post-line" v-if="publishedInfo.expectedHours">建议课时：{{ publishedInfo.expectedHours }} 课时</view>
+			<view class="post-line" v-if="publishedInfo.address">说明：{{ publishedInfo.address }}</view>
+		</view>
+
 		<!-- 教师评价 -->
 		<view class="eval-title">
 			<text>教师评价</text>
@@ -47,6 +55,7 @@
 	import {
 		getOneTeacher
 	} from '@/api/teacher/getTeacherMag'
+	import { listPublishedCourses } from '@/api/course/course'
 	import {
 		baseUrl
 	} from '../../../../config';
@@ -62,7 +71,8 @@
 				school: '北京师范大学',
 				score: 4.8,
 				subjects: ['语文'],
-				hourlyFee: 280
+				hourlyFee: 280,
+				publishedInfo: null
 			}
 		},
 		onLoad(e){
@@ -75,7 +85,8 @@
 			init() {
 				getOneTeacher(this.id).then(res => {
 					var msg = res.data;
-					this.avatar = baseUrl + msg.image;
+					const img = msg.image || ''
+					this.avatar = this.resolveImage(img)
 					this.teacherName = msg.realName;
 					this.gender = msg.gender;
 					this.education =msg.education;
@@ -84,10 +95,28 @@
 					this.hourlyFee = msg.hourlyRate;
 					this.score = msg.rating;
 				})
+				listPublishedCourses({
+					pageNum: 1,
+					pageSize: 1,
+					teacherId: this.id,
+					status: 0
+				}).then(res => {
+					const rows = res.rows || []
+					this.publishedInfo = rows.length ? rows[0] : null
+				}).catch(() => {
+					this.publishedInfo = null
+				})
 				
 			},
-			getImage(){
-				
+			resolveImage(url) {
+				if (!url) return '/static/image/1.png'
+				if (String(url).startsWith('http://')) return '/static/image/1.png'
+				if (String(url).startsWith('http')) return url
+				return baseUrl + url
+			},
+			formatDate(v) {
+				if (!v) return ''
+				return String(v).split('T')[0]
 			},
 			goToAppointmentTeacher() {
 			     uni.navigateTo({
@@ -213,6 +242,26 @@
 		font-size: 12px;
 		color: #999;
 		margin-top: 5px;
+	}
+
+	.post-box {
+		background-color: #fff7ef;
+		border-radius: 10px;
+		padding: 14px;
+		margin: 15px 0;
+	}
+
+	.post-title {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333;
+		margin-bottom: 8px;
+	}
+
+	.post-line {
+		font-size: 14px;
+		color: #555;
+		line-height: 1.7;
 	}
 
 	/* 教师评价样式 */

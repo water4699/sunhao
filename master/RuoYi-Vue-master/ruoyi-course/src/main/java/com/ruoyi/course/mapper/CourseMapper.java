@@ -1,6 +1,7 @@
 package com.ruoyi.course.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.course.domain.Course;
 
 /**
@@ -55,4 +56,24 @@ public interface CourseMapper
      * @return 结果
      */
     public int deleteCourseByCourseIds(String[] courseIds);
+
+    /**
+     * 同一学生、教师、上课日期的有效预约数量（排除已取消 status=2）
+     */
+    public int countActiveBookingSameSlot(Course course);
+
+    /**
+     * 教师端：预约请求列表
+     */
+    public List<Course> selectTeacherBookingAppList(@Param("teacherId") String teacherId, @Param("status") Long status);
+
+    /**
+     * 教师端：处理预约（1同意/2拒绝）
+     */
+    public int updateBookingStatusByTeacher(@Param("courseId") String courseId, @Param("teacherId") String teacherId, @Param("status") Long status);
+
+    /**
+     * 学生端：取消预约/申请取消。
+     */
+    public int updateBookingStatusByStudent(@Param("courseId") String courseId, @Param("studentId") String studentId, @Param("status") Long status, @Param("cancelReason") String cancelReason);
 }

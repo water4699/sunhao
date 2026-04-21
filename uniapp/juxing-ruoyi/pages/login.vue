@@ -12,6 +12,10 @@
 				<view class="tab-item" :class="{ active: loginType === 'password' }" @click="switchType('password')">
 					密码登录</view>
 			</view>
+			<!-- 注册入口：首屏可见，避免密码+验证码时底部链接被挡在屏外 -->
+			<view class="register-hint" @click="goRegister">
+				<text>没有账号？</text><text class="register-strong">立即注册</text>
+			</view>
 
 			<!-- 验证码登录 -->
 			<view v-if="loginType === 'code'">
@@ -52,6 +56,9 @@
 			<view class="action-btn">
 				<button @click="handleLogin" class="login-btn cu-btn block bg-yellow lg round">登录</button>
 			</view>
+			<view class="footer-links">
+				<text class="link-text" @click="goRegister">没有账号？去注册</text>
+			</view>
 		</view>
 	</view>
 </template>
@@ -80,13 +87,13 @@
 				register: false,
 				loginType: 'code',
 				loginForm: {
-					username: 'zhangsan',
-					password: 'admin123',
+					username: '',
+					password: '',
 					code: '',
 					uuid: ''
 				},
 				codeLoginForm: {
-					phone: '15888888888',
+					phone: '',
 					code: ''
 				},
 				smsCodeBtn: {
@@ -105,6 +112,12 @@
 
 			switchType(type) {
 				this.loginType = type
+			},
+
+			goRegister() {
+				uni.navigateTo({
+					url: '/pages/register'
+				})
 			},
 
 			// 获取图形验证码
@@ -223,7 +236,7 @@
 							setToken(res.token)
 							this.loginSuccess()
 						} else {
-							console.error(e)
+							uni.showToast({ title: res.msg || '登录失败', icon: 'none' })
 						}
 						uni.hideLoading()
 					})
@@ -240,7 +253,7 @@
 							setToken(res.token)
 							this.loginSuccess()
 						} else {
-							console.error(e)
+							uni.showToast({ title: res.msg || '登录失败', icon: 'none' })
 						}
 						uni.hideLoading()
 					})
@@ -252,6 +265,13 @@
 
 			loginSuccess() {
 				this.GetInfo().then(() => {
+					try {
+						const roles = (this.$store && this.$store.getters && this.$store.getters.roles) || []
+						uni.setTabBarItem({
+							index: 1,
+							text: roles.includes('teacher') ? '工作台' : '找老师'
+						})
+					} catch (e) {}
 					uni.reLaunch({
 						url: '/pages/index/index'
 					})
@@ -415,6 +435,30 @@
 				margin-left: 10px;
 				width: 200rpx;
 			}
+		}
+
+		.register-hint {
+			margin: -6rpx 0 28rpx;
+			font-size: 28rpx;
+			color: #666;
+			text-align: center;
+
+			.register-strong {
+				color: #d48806;
+				font-weight: 600;
+				margin-left: 8rpx;
+			}
+		}
+
+		.footer-links {
+			margin-top: 28rpx;
+			margin-bottom: calc(24rpx + env(safe-area-inset-bottom));
+			text-align: center;
+		}
+
+		.link-text {
+			font-size: 28rpx;
+			color: #d48806;
 		}
 	}
 

@@ -25,6 +25,10 @@
           </view>
           <text class="rating-text">{{ rating }}分</text>
         </view>
+        <view class="fee-row">
+          <text class="fee-label">{{ feeLabel }}</text>
+          <text class="fee-value">¥{{ hourlyFee || 0 }}/课时</text>
+        </view>
       </view>
     </view>
 
@@ -61,6 +65,16 @@
         <text class="form-label">上课地址</text>
         <input v-model="address" placeholder="请输入详细地址" class="address-input" />
       </view>
+
+      <view class="form-item">
+        <text class="form-label">联系方式</text>
+        <input v-model="contactPhone" placeholder="请输入手机号或微信号" class="address-input" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">留言</text>
+        <textarea v-model="contactNote" maxlength="120" placeholder="可简单说明需求，方便老师联系" class="remark-input" />
+      </view>
     </view>
 
     <!-- 确认按钮 -->
@@ -71,105 +85,180 @@
 </template>
 
 <script>
-	
 	import {
 		getOneTeacher
 	} from '@/api/teacher/getTeacherMag'
 	import {
+		addCourse
+	} from '@/api/course/course'
+	import {
+		getPublishedCourseDetail
+	} from '@/api/course/course'
+	import {
 		baseUrl
-	} from '../../../../config';
-	
-export default {
-  data() {
-    return {
-      teacherAvatar: 'https://ai-public.mastergo.com/ai/img_res/ed1d9ac872926869a023748b95562aab.jpg',
-      teacherName: '王老师',
-      teacherSubjects: ['数学', '物理'],
-      rating: 4.5,
-      selectedDate: '',
-      selectedTime: '',
-      // selectedSubject: '',
-      address: '',
-      subjectOptions: ['数学', '物理', '化学', '英语'],
-      startDate: '2023-01-01',
-      endDate: '2024-12-31'
-    }
-  },
-  computed: {
-    isFormValid() {
-      return this.selectedDate && this.selectedTime && this.selectedSubject !== '' && this.address;
-    },
-    fullStars() {
-      return Math.floor(this.rating);
-    },
-    hasHalfStar() {
-      return this.rating % 1 >= 0.5;
-    }
-  },
-  
-  onLoad(e){
-	  console.log(e.id);
-  	this.id = e.id;
-  },
-  mounted() {
-  	this.init();
-  },
-  methods: {
-	  init() {
-	  	getOneTeacher(this.id).then(res => {
-	  		var msg = res.data;
-			console.log(msg);
-	  		this.teacherAvatar = baseUrl + msg.image;
-	  		this.teacherName = msg.realName;
-	  		this.gender = msg.gender;
-	  		this.education =msg.education;
-	  		this.school =msg.university;
-	  		this.teacherSubjects = msg.subjectName;
-	  		this.hourlyFee = msg.hourlyRate;
-	  		this.score = msg.rating;
-	  	})
-	  	
-	  },
-    handleDateChange(e) {
-      this.selectedDate = e.detail.value;
-    },
-    handleTimeChange(e) {
-      this.selectedTime = e.detail.value;
-    },
-    handleSubjectChange(e) {
-      this.selectedSubject = e.detail.value;
-    },
-    handleSubmit() {
-      if (!this.isFormValid) {
-        uni.showToast({
-          title: '请完善所有预约信息',
-          icon: 'none',
-        });
-        return;
-      }
-      
-      uni.showToast({
-        title: '预约成功',
-        icon: 'success',
-		duration: 1500,
-		success: () => {
-		    // 在 toast 消失后跳转
-		    setTimeout(() => {
-		        uni.switchTab({
-		            url: `/pages/findteacher/findteacher/findteacher`,
-		        })
-		    }, 1500)
+	} from '../../../../config'
+	import {
+		getToken
+	} from '@/utils/auth'
+
+	export default {
+		data() {
+			return {
+				id: '',
+				teacherAvatar: '',
+				teacherName: '',
+				teacherSubjects: '',
+				teacherSubjectId: '',
+					publishId: '',
+					bookingSource: 'teacher',
+					rating: 0,
+					hourlyFee: 0,
+				selectedDate: '',
+				selectedTime: '',
+				address: '',
+				contactPhone: '',
+				contactNote: '',
+				startDate: '',
+				endDate: ''
+			}
+		},
+		computed: {
+			isFormValid() {
+				return !!(this.selectedDate && this.selectedTime && (this.address || '').trim() && (this.contactPhone || '').trim())
+			},
+			fullStars() {
+				return Math.floor(Number(this.rating) || 0)
+			},
+				hasHalfStar() {
+					return (Number(this.rating) || 0) % 1 >= 0.5
+				},
+				feeLabel() {
+					return this.bookingSource === 'tutoring' ? '家教课时费' : '老师预期时薪'
+				}
+			},
+		onLoad(options) {
+			if (!getToken()) {
+				uni.showToast({
+					title: '请先登录',
+					icon: 'none'
+				})
+				setTimeout(() => {
+					uni.navigateTo({
+						url: '/pages/login'
+					})
+				}, 800)
+				return
+			}
+				this.id = (options && (options.id || options.teacherId)) || ''
+				this.publishId = (options && options.publishId) || ''
+				this.bookingSource = this.publishId ? 'tutoring' : 'teacher'
+				const d = new Date()
+			this.startDate = this.fmtDate(d)
+			const end = new Date(d.getTime() + 90 * 86400000)
+			this.endDate = this.fmtDate(end)
+		},
+		mounted() {
+			this.loadTeacher()
+		},
+		methods: {
+			fmtDate(d) {
+				const y = d.getFullYear()
+				const m = String(d.getMonth() + 1).padStart(2, '0')
+				const day = String(d.getDate()).padStart(2, '0')
+				return `${y}-${m}-${day}`
+			},
+			async loadTeacher() {
+				if (!this.id) return
+				try {
+					const res = await getOneTeacher(this.id)
+					const t = res.data
+					if (!t) return
+					const img = t.image || ''
+					if (!img) this.teacherAvatar = '/static/image/1.png'
+					else if (String(img).startsWith('http://')) this.teacherAvatar = '/static/image/1.png'
+					else if (String(img).startsWith('http')) this.teacherAvatar = img
+					else this.teacherAvatar = baseUrl + img
+					this.teacherName = t.realName || ''
+					this.teacherSubjects = t.subjectName || ''
+					const sid = t.subjectId
+					this.teacherSubjectId = sid != null && sid !== '' ? String(sid) : ''
+					this.rating = Number(t.rating) || 0
+					if (!this.publishId) this.hourlyFee = t.hourlyRate != null ? t.hourlyRate : 0
+				} catch (e) {}
+				if (this.publishId) {
+					try {
+						const res = await getPublishedCourseDetail(this.publishId)
+						const row = res.data || {}
+						if (!row) return
+						if (row.subjectName) this.teacherSubjects = row.subjectName
+						if (row.subjectId != null && row.subjectId !== '') this.teacherSubjectId = String(row.subjectId)
+						if (row.hourlyRate != null) this.hourlyFee = row.hourlyRate
+						this.bookingSource = 'tutoring'
+					} catch (e) {}
+				}
+			},
+			handleDateChange(e) {
+				this.selectedDate = e.detail.value
+			},
+			handleTimeChange(e) {
+				this.selectedTime = e.detail.value
+			},
+			handleSubmit() {
+				if (!getToken()) {
+					uni.showToast({
+						title: '请先登录',
+						icon: 'none'
+					})
+					return
+				}
+				if (!this.isFormValid) {
+					uni.showToast({
+						title: '请填写日期、时段、地址和联系方式',
+						icon: 'none'
+					})
+					return
+				}
+				const address = (this.address || '').trim()
+				const contactPhone = (this.contactPhone || '').trim()
+				const contactNote = (this.contactNote || '').trim()
+				const payload = {
+					teacherId: String(this.id),
+					startDate: this.selectedDate,
+					address: address,
+					timeSlot: this.selectedTime,
+					classAddress: address,
+					contactInfo: contactPhone,
+					contactNote: contactNote,
+					hourlyRate: this.hourlyFee,
+					expectedHours: '1',
+					status: 0
+				}
+				if (this.teacherSubjectId) {
+					payload.subjectId = this.teacherSubjectId
+				}
+				if (this.publishId) {
+					payload.publishId = this.publishId
+				}
+				uni.showLoading({
+					title: '提交中...'
+				})
+				addCourse(payload).then(() => {
+					uni.hideLoading()
+					uni.showToast({
+						title: '预约已提交',
+						icon: 'success'
+					})
+					setTimeout(() => {
+						uni.navigateTo({
+							url: '/pages/mine/order/order'
+						})
+					}, 1200)
+				}).catch(() => {
+					uni.hideLoading()
+				})
+			}
 		}
-      });
-      
-      // 重置表单
-      this.selectedDate = '';
-      this.selectedTime = '';
-      this.selectedSubject = '';
-      this.address = '';
-    }
-  }
-}
+	}
 </script>
 
 <style>
@@ -258,6 +347,27 @@ page {
   font-size: 16px;
 }
 
+.fee-row {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+
+.fee-label {
+  margin-right: 12rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: #FFF3CD;
+  color: #8B4513;
+  font-size: 12px;
+}
+
+.fee-value {
+  color: #FF6A00;
+  font-size: 17px;
+  font-weight: 700;
+}
+
 .booking-form {
   background-color: #FFFFFF;
   border-radius: 20rpx;
@@ -301,6 +411,18 @@ page {
   height: 90rpx;
   width: 100%;
   padding: 0 30rpx;
+  background-color: #FFF3CD;
+  border-radius: 16rpx;
+  font-size: 18px;
+  border: 1rpx solid #FFEBCD;
+  box-sizing: border-box;
+  color: #333333;
+}
+
+.remark-input {
+  width: 100%;
+  min-height: 180rpx;
+  padding: 24rpx 30rpx;
   background-color: #FFF3CD;
   border-radius: 16rpx;
   font-size: 18px;

@@ -30,11 +30,12 @@
 				<uni-icons type="right" size="16" color="#ccc" />
 			</view>
 
-			<view class="function-box" @click="handleVipClick">
-				<uni-icons type="vip" size="22" color="#666" />
-				<text class="function-text">我的会员卡</text>
+			<view class="function-box" @click="handleReviewClick">
+				<uni-icons type="chatboxes" size="22" color="#666" />
+				<text class="function-text">家长评价</text>
 				<uni-icons type="right" size="16" color="#ccc" />
 			</view>
+
 
 			<view class="function-box" @click="handleAbout">
 				<uni-icons type="info" size="22" color="#666" />
@@ -93,11 +94,10 @@
 			handleOrderClick() {
 				this.$tab.navigateTo('/pages/mine/order/order')
 			},
-			handleVipClick() {
-				this.$tab.navigateTo('/pages/mine/card/card/card')
-			},
-			
-		}
+			handleReviewClick() {
+					this.$tab.navigateTo('/pages/review/review')
+				}
+			}
 	}
 </script>
 

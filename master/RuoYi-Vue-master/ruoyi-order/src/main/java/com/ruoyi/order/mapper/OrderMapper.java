@@ -1,7 +1,9 @@
 package com.ruoyi.order.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.order.domain.Order;
+import com.ruoyi.order.domain.OrderAppVo;
 
 /**
  * 订单Mapper接口
@@ -55,4 +57,15 @@ public interface OrderMapper
      * @return 结果
      */
     public int deleteOrderByOrderIds(String[] orderIds);
+
+    /**
+     * 小程序：当前用户订单列表，左联商品名称
+     */
+    List<OrderAppVo> selectAppOrderListByUserId(@Param("userId") String userId);
+
+    int countPublishedCourseById(@Param("publishId") String publishId);
+
+    Long selectPublishedCourseStatusById(@Param("publishId") String publishId);
+
+    java.math.BigDecimal selectPublishedCoursePriceById(@Param("publishId") String publishId);
 }

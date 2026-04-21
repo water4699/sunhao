@@ -41,6 +41,33 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="地区" prop="areaId">
+        <el-select v-model="queryParams.areaId" clearable filterable placeholder="全部" style="width: 160px">
+          <el-option
+            v-for="o in areaOptions"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="年级" prop="gradeId">
+        <el-select v-model="queryParams.gradeId" clearable filterable placeholder="全部" style="width: 160px">
+          <el-option
+            v-for="o in gradeOptions"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="认证状态" prop="status">
+        <el-select v-model="queryParams.status" clearable placeholder="全部" style="width: 150px">
+          <el-option label="待审核" :value="0" />
+          <el-option label="已通过" :value="1" />
+          <el-option label="已驳回" :value="2" />
+        </el-select>
+      </el-form-item>
 <!--&lt;!&ndash;      <el-form-item label="时间" prop="creatTime">&ndash;&gt;-->
 <!--&lt;!&ndash;        <el-date-picker clearable&ndash;&gt;-->
 <!--&lt;!&ndash;          v-model="queryParams.creatTime"&ndash;&gt;-->
@@ -110,9 +137,26 @@
       <el-table-column label="性别" align="center" prop="gender" />
       <el-table-column label="学历" align="center" prop="education" />
       <el-table-column label="所在大学" align="center" prop="university" />
+      <el-table-column label="地区" align="center" prop="areaId" width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ formatAreaName(scope.row.areaId) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="年级" align="center" prop="gradeId" width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ formatGradeName(scope.row.gradeId) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="时薪" align="center" prop="hourlyRate" />
       <el-table-column label="平均评分" align="center" prop="rating" />
-      <el-table-column label="认证状态" align="center" prop="status" />
+      <el-table-column label="认证状态" align="center" prop="status" width="110">
+        <template slot-scope="scope">
+          <el-tag v-if="Number(scope.row.status) === 0" type="warning" size="small">待审核</el-tag>
+          <el-tag v-else-if="Number(scope.row.status) === 1" type="success" size="small">已通过</el-tag>
+          <el-tag v-else-if="Number(scope.row.status) === 2" type="info" size="small">已驳回</el-tag>
+          <span v-else>{{ scope.row.status }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="图片" align="center" prop="image" width="100">
         <template slot-scope="scope">
           <image-preview :src="scope.row.image" :width="50" :height="50"/>
@@ -124,8 +168,24 @@
           <span>{{ parseTime(scope.row.creatTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
         <template slot-scope="scope">
+          <el-button
+            v-if="Number(scope.row.status) === 0"
+            size="mini"
+            type="text"
+            icon="el-icon-check"
+            @click="handleApprove(scope.row)"
+            v-hasPermi="['system:teacher:edit']"
+          >通过</el-button>
+          <el-button
+            v-if="Number(scope.row.status) === 0"
+            size="mini"
+            type="text"
+            icon="el-icon-close"
+            @click="handleReject(scope.row)"
+            v-hasPermi="['system:teacher:edit']"
+          >驳回</el-button>
           <el-button
             size="mini"
             type="text"
@@ -153,10 +213,47 @@
     />
 
     <!-- 添加或修改教师信息对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-dialog :title="title" :visible.sync="open" width="560px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="认证状态" prop="status">
+          <el-select
+            v-if="form.teacherId != null"
+            v-model="form.status"
+            placeholder="请选择审核状态"
+            style="width: 100%"
+          >
+            <el-option label="待审核" :value="0" />
+            <el-option label="已通过（家长端「找老师」可见）" :value="1" />
+            <el-option label="已驳回" :value="2" />
+          </el-select>
+          <el-input
+            v-else
+            value="待审核（保存后须管理员在「修改」中审核通过）"
+            disabled
+          />
+        </el-form-item>
         <el-form-item label="关联科目" prop="subjectId">
-          <el-input v-model="form.subjectId" placeholder="请输入关联科目" />
+          <el-input v-model="form.subjectId" placeholder="请输入科目ID" />
+        </el-form-item>
+        <el-form-item label="所在地区" prop="areaId">
+          <el-select v-model="form.areaId" clearable filterable placeholder="请选择（可与地图API对接）" style="width: 100%">
+            <el-option
+              v-for="o in areaOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="授课年级" prop="gradeId">
+          <el-select v-model="form.gradeId" clearable filterable placeholder="请选择" style="width: 100%">
+            <el-option
+              v-for="o in gradeOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="学历" prop="education">
           <el-select v-model="form.education" placeholder="请选择">
@@ -202,11 +299,17 @@
 
 <script>
 import { listTeacher, getTeacher, delTeacher, addTeacher, updateTeacher } from "@/api/my/teacher"
+import { listJinan } from "@/api/my/jinan"
+import { listLevel } from "@/api/my/level"
 
 export default {
   name: "Teacher",
   data() {
     return {
+      areaOptions: [],
+      gradeOptions: [],
+      areaNameMap: {},
+      gradeNameMap: {},
 
       // 遮罩层
       loading: true,
@@ -240,7 +343,9 @@ export default {
         rating: null,
         status: null,
         image: null,
-        creatTime: null
+        creatTime: null,
+        areaId: null,
+        gradeId: null
       },
       // 学历下拉框备选数据
       educations: [{
@@ -289,9 +394,44 @@ export default {
     }
   },
   created() {
+    this.loadAreaGradeDict()
     this.getList()
   },
   methods: {
+    loadAreaGradeDict() {
+      listJinan({ pageNum: 1, pageSize: 999 }).then(res => {
+        const rows = res.rows || []
+        this.areaOptions = rows.map(r => ({
+          label: r.name,
+          value: r.areaId != null ? String(r.areaId) : ""
+        })).filter(o => o.value)
+        const m = {}
+        rows.forEach(r => {
+          if (r.areaId != null) m[String(r.areaId)] = r.name
+        })
+        this.areaNameMap = m
+      })
+      listLevel({ pageNum: 1, pageSize: 999 }).then(res => {
+        const rows = res.rows || []
+        this.gradeOptions = rows.map(r => ({
+          label: r.name,
+          value: r.gradeId != null ? String(r.gradeId) : ""
+        })).filter(o => o.value)
+        const m = {}
+        rows.forEach(r => {
+          if (r.gradeId != null) m[String(r.gradeId)] = r.name
+        })
+        this.gradeNameMap = m
+      })
+    },
+    formatAreaName(id) {
+      if (id == null || id === "") return "-"
+      return this.areaNameMap[String(id)] || id
+    },
+    formatGradeName(id) {
+      if (id == null || id === "") return "-"
+      return this.gradeNameMap[String(id)] || id
+    },
     /** 查询教师信息列表 */
     getList() {
       this.loading = true
@@ -318,9 +458,11 @@ export default {
         university: null,
         hourlyRate: null,
         rating: null,
-        status: null,
+        status: 0,
         image: null,
-        creatTime: null
+        creatTime: null,
+        areaId: null,
+        gradeId: null
       }
       this.resetForm("form")
     },
@@ -351,7 +493,17 @@ export default {
       this.reset()
       const teacherId = row.teacherId || this.ids
       getTeacher(teacherId).then(response => {
-        this.form = response.data
+        const d = response.data || {}
+        this.form = { ...d }
+        if (this.form.areaId != null && this.form.areaId !== "") {
+          this.form.areaId = String(this.form.areaId)
+        }
+        if (this.form.gradeId != null && this.form.gradeId !== "") {
+          this.form.gradeId = String(this.form.gradeId)
+        }
+        if (this.form.status != null && this.form.status !== "") {
+          this.form.status = Number(this.form.status)
+        }
         this.open = true
         this.title = "修改教师信息"
       })
@@ -375,6 +527,24 @@ export default {
           }
         }
       })
+    },
+    handleApprove(row) {
+      const teacherId = row.teacherId
+      this.$modal.confirm('确认将该教师审核为「已通过」？通过后家长端「找老师」将展示该教师。').then(() => {
+        return updateTeacher({ teacherId: teacherId, status: 1 })
+      }).then(() => {
+        this.getList()
+        this.$modal.msgSuccess("已审核通过")
+      }).catch(() => {})
+    },
+    handleReject(row) {
+      const teacherId = row.teacherId
+      this.$modal.confirm('确认驳回该入驻申请？驳回后家长端不会展示该教师。').then(() => {
+        return updateTeacher({ teacherId: teacherId, status: 2 })
+      }).then(() => {
+        this.getList()
+        this.$modal.msgSuccess("已驳回")
+      }).catch(() => {})
     },
     /** 删除按钮操作 */
     handleDelete(row) {

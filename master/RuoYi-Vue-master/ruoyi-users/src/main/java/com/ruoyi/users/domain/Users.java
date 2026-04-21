@@ -2,6 +2,7 @@ package com.ruoyi.users.domain;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
@@ -22,6 +23,18 @@ public class Users extends BaseEntity
     /** 手机号 */
     @Excel(name = "手机号")
     private String phone;
+
+    /** 邮箱 */
+    @Excel(name = "邮箱")
+    private String email;
+
+    /** 性别（0男/1女/2未知） */
+    @Excel(name = "性别", readConverterExp = "0=男,1=女,2=未知")
+    private String sex;
+
+    /** 登录密码（BCrypt，不落库展示） */
+    @JsonIgnore
+    private String password;
 
     /** 用户类型 */
     @Excel(name = "用户类型")
@@ -65,6 +78,36 @@ public class Users extends BaseEntity
         return phone;
     }
 
+    public String getEmail()
+    {
+        return email;
+    }
+
+    public void setEmail(String email)
+    {
+        this.email = email;
+    }
+
+    public String getSex()
+    {
+        return sex;
+    }
+
+    public void setSex(String sex)
+    {
+        this.sex = sex;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+
     public void setUsersType(String usersType) 
     {
         this.usersType = usersType;
@@ -101,6 +144,8 @@ public class Users extends BaseEntity
             .append("usersId", getUsersId())
             .append("usersname", getUsersname())
             .append("phone", getPhone())
+            .append("email", getEmail())
+            .append("sex", getSex())
             .append("usersType", getUsersType())
             .append("image", getImage())
             .append("status", getStatus())

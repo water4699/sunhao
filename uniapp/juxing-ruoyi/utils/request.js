@@ -14,6 +14,13 @@ const request = config => {
   if (getToken() && !isToken) {
     config.header['Authorization'] = 'Bearer ' + getToken()
   }
+  // 微信小程序 POST 默认可能走 form-urlencoded，@RequestBody 收不到 registerRole 等字段；须显式 JSON
+  const m = (config.method || 'get').toLowerCase()
+  if ((m === 'post' || m === 'put') && config.data != null && typeof config.data === 'object') {
+    if (!config.header['Content-Type'] && !config.header['content-type']) {
+      config.header['Content-Type'] = 'application/json;charset=UTF-8'
+    }
+  }
   // get请求映射params参数
   if (config.params) {
     let url = config.url + '?' + tansParams(config.params)
@@ -46,6 +53,9 @@ const request = config => {
             }
           })
           reject('无效的会话，或者会话已过期，请重新登录。')
+        } else if (code === 403) {
+          toast(msg)
+          reject('403')
         } else if (code === 500) {
           toast(msg)
           reject('500')

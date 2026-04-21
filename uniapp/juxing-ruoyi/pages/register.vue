@@ -3,7 +3,7 @@
     <view class="logo-content align-center justify-center flex">
       <image style="width: 100rpx;height: 100rpx;" :src="globalConfig.appInfo.logo" mode="widthFix">
       </image>
-      <text class="title">若依移动端注册</text>
+      <text class="title">聚星教育 · 注册</text>
     </view>
     <view class="login-form-content">
       <view class="input-item flex align-center">
@@ -17,6 +17,16 @@
       <view class="input-item flex align-center">
         <view class="iconfont icon-password icon"></view>
         <input v-model="registerForm.confirmPassword" type="password" class="input" placeholder="请输入重复密码" maxlength="20" />
+      </view>
+      <view class="input-item flex align-center">
+        <view class="iconfont icon-user icon"></view>
+        <input v-model="registerForm.phone" class="input" type="number" placeholder="请输入手机号（用于验证码登录）" maxlength="11" />
+      </view>
+      <view class="input-item flex align-center">
+        <view class="iconfont icon-user icon"></view>
+        <picker mode="selector" :range="roleLabels" :value="registerRoleIndex" @change="onRoleChange" class="role-picker">
+          <view class="input role-picker-text">{{ roleLabels[registerRoleIndex] }}</view>
+        </picker>
       </view>
       <view class="input-item flex align-center" style="width: 60%;margin: 0px;" v-if="captchaEnabled">
         <view class="iconfont icon-code icon"></view>
@@ -36,7 +46,7 @@
 </template>
 
 <script>
-  import { getCodeImg, register } from '@/api/login'
+  import { getCodeImg, registerApp } from '@/api/login'
 
   export default {
     data() {
@@ -44,10 +54,17 @@
         codeUrl: "",
         captchaEnabled: true,
         globalConfig: getApp().globalData.config,
+        registerRoleIndex: 0,
+        roleLabels: [
+          '我是学生',
+          '我是家长'
+        ],
+        roleValues: ['student', 'parent'],
         registerForm: {
           username: "",
           password: "",
           confirmPassword: "",
+          phone: "",
           code: "",
           uuid: ""
         }
@@ -57,6 +74,9 @@
       this.getCode()
     },
     methods: {
+      onRoleChange(e) {
+        this.registerRoleIndex = Number(e.detail.value)
+      },
       // 用户登录
       handleUserLogin() {
         this.$tab.navigateTo(`/pages/login`)
@@ -81,6 +101,10 @@
           this.$modal.msgError("请再次输入您的密码")
         } else if (this.registerForm.password !== this.registerForm.confirmPassword) {
           this.$modal.msgError("两次输入的密码不一致")
+        } else if (this.registerForm.phone === "") {
+          this.$modal.msgError("请输入手机号")
+        } else if (!/^1\d{10}$/.test(this.registerForm.phone)) {
+          this.$modal.msgError("手机号格式不正确")
         } else if (this.registerForm.code === "" && this.captchaEnabled) {
           this.$modal.msgError("请输入验证码")
         } else {
@@ -88,9 +112,13 @@
           this.register()
         }
       },
-      // 用户注册
+      // 用户注册：写入业务表 users（不经 sys_user）
       async register() {
-        register(this.registerForm).then(res => {
+        const payload = {
+          ...this.registerForm,
+          registerRole: this.roleValues[this.registerRoleIndex]
+        }
+        registerApp(payload).then(res => {
           this.$modal.closeLoading()
           uni.showModal({
           	title: "系统提示",

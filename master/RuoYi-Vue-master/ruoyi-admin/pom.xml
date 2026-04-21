@@ -48,11 +48,6 @@
         </dependency>
         <dependency>
             <groupId>com.ruoyi</groupId>
-            <artifactId>ruoyi-card</artifactId>
-            <version>3.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.ruoyi</groupId>
             <artifactId>ruoyi-notification</artifactId>
             <version>3.9.0</version>
         </dependency>
@@ -94,6 +89,11 @@
         <dependency>
             <groupId>com.ruoyi</groupId>
             <artifactId>ruoyi-teacher</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-ai</artifactId>
             <version>3.9.0</version>
         </dependency>
         <!-- spring-boot-devtools -->

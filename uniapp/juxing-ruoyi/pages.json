@@ -19,6 +19,12 @@
         "navigationBarTitleText": "聚星教育"
       }
     },
+    {
+      "path": "pages/aiAssistant/aiAssistant",
+      "style": {
+        "navigationBarTitleText": "智能选课助手"
+      }
+    },
     // {
     //   "path": "pages/work/index",
     //   "style": {
@@ -29,6 +35,24 @@
 	  "path": "pages/product/product",
 	  "style": {
 	    "navigationBarTitleText": "进步商品"
+	  }
+	},
+	{
+	  "path": "pages/coursePublish/coursePublish",
+	  "style": {
+	    "navigationBarTitleText": "发布家教信息"
+	  }
+	},
+	{
+	  "path": "pages/courses/courses",
+	  "style": {
+	    "navigationBarTitleText": "课程列表"
+	  }
+	},
+	{
+	  "path": "pages/courses/courseDetail",
+	  "style": {
+	    "navigationBarTitleText": "课程详情"
 	  }
 	},
     {
@@ -110,20 +134,6 @@
 	  }
 	},
 	{
-		"path" : "pages/mine/card/card/card",
-		"style" : 
-		{
-			"navigationBarTitleText" : "我的会员卡"
-		}
-	},
-	{
-		"path" : "pages/mine/card/card/addCard/addCard",
-		"style" : 
-		{
-			"navigationBarTitleText" : "会员卡"
-		}
-	},
-	{
 		"path" : "pages/findteacher/findteacher/teacherDetail/teacherDetail",
 		"style" : 
 		{
@@ -135,6 +145,13 @@
 		"style" : 
 		{
 			"navigationBarTitleText" : "评论区"
+		}
+	},
+	{
+		"path" : "pages/review/reviewSubmit",
+		"style" : 
+		{
+			"navigationBarTitleText" : "发表评价"
 		}
 	},
 	{
@@ -159,10 +176,17 @@
 		}
 	},
 	{
-		"path" : "pages/mine/card/card/addCard/addCardOrder",
-		"style" : 
+		"path" : "pages/tutorRequest/create",
+		"style" :
 		{
-			"navigationBarTitleText" : "确认购买"
+			"navigationBarTitleText" : "发布找家教需求"
+		}
+	},
+	{
+		"path" : "pages/tutorRequest/my",
+		"style" :
+		{
+			"navigationBarTitleText" : "我的需求"
 		}
 	}
    
@@ -201,7 +225,7 @@
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "RuoYi",
+    "navigationBarTitleText": "聚星教育",
     "navigationBarBackgroundColor": "#FFFFFF"
   }
 }

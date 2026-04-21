@@ -2,6 +2,7 @@ package com.ruoyi.course.service;
 
 import java.util.List;
 import com.ruoyi.course.domain.Course;
+import com.ruoyi.course.domain.TeacherPublishedCourse;
 
 /**
  * 课程管理Service接口
@@ -33,6 +34,24 @@ public interface ICourseService
     public int insertCourse(Course course);
 
     /**
+     * 老师上架课程（无 studentId）
+     *
+     * @param course 课程
+     * @return 结果
+     */
+    public int insertTeacherPublishedCourse(TeacherPublishedCourse course);
+
+    public java.util.List<TeacherPublishedCourse> selectTeacherPublishedCourseList(TeacherPublishedCourse query);
+
+    public TeacherPublishedCourse selectTeacherPublishedCourseById(String publishId);
+
+    public int updateTeacherPublishedCourse(TeacherPublishedCourse course);
+
+    public int updateTeacherPublishedCourseStatus(TeacherPublishedCourse course);
+
+    public int deleteTeacherPublishedCourse(TeacherPublishedCourse course);
+
+    /**
      * 修改课程管理
      * 
      * @param course 课程管理
@@ -55,4 +74,19 @@ public interface ICourseService
      * @return 结果
      */
     public int deleteCourseByCourseId(String courseId);
+
+    /**
+     * 教师端：预约请求列表
+     */
+    public List<Course> selectTeacherBookingAppList(String teacherId, Long status);
+
+    /**
+     * 教师端：处理预约（1同意/2拒绝）
+     */
+    public int teacherDecideBooking(String teacherId, String courseId, Long status);
+
+    /**
+     * 学生端：待确认时取消，已确认时申请取消。
+     */
+    public int studentCancelBooking(String studentId, String courseId, String cancelReason);
 }

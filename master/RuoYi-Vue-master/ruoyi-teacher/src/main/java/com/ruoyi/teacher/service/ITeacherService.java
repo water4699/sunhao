@@ -57,4 +57,8 @@ public interface ITeacherService
     public int deleteTeacherByTeacherId(String teacherId);
 
     String selectSubjectBySubjectId(Integer subjectid);
+
+    int countTeacherByUserId(String userId);
+
+    Teacher selectTeacherByUserId(String userId);
 }

@@ -26,6 +26,14 @@ public class Teacher extends BaseEntity
     @Excel(name = "关联科目")
     private Integer subjectId;
 
+    /** 授课地区ID（关联 area_jinan.area_id，小程序筛选用） */
+    @Excel(name = "地区ID")
+    private String areaId;
+
+    /** 授课年级ID（关联 grade_level.grade_id，小程序筛选用） */
+    @Excel(name = "年级ID")
+    private String gradeId;
+
     /** 真实姓名 */
     @Excel(name = "真实姓名")
     private String realName;
@@ -88,12 +96,32 @@ public class Teacher extends BaseEntity
         this.subjectId = subjectId;
     }
 
-    public Integer getSubjectId() 
+    public Integer getSubjectId()
     {
         return subjectId;
     }
 
-    public void setRealName(String realName) 
+    public void setAreaId(String areaId)
+    {
+        this.areaId = areaId;
+    }
+
+    public String getAreaId()
+    {
+        return areaId;
+    }
+
+    public void setGradeId(String gradeId)
+    {
+        this.gradeId = gradeId;
+    }
+
+    public String getGradeId()
+    {
+        return gradeId;
+    }
+
+    public void setRealName(String realName)
     {
         this.realName = realName;
     }
@@ -189,6 +217,8 @@ public class Teacher extends BaseEntity
             .append("teacherId", getTeacherId())
             .append("userId", getUserId())
             .append("subjectId", getSubjectId())
+            .append("areaId", getAreaId())
+            .append("gradeId", getGradeId())
             .append("realName", getRealName())
             .append("gender", getGender())
             .append("education", getEducation())

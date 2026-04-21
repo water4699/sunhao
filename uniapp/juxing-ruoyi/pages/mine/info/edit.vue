@@ -58,9 +58,6 @@
           },
           email: {
             rules: [{
-              required: true,
-              errorMessage: '邮箱地址不能为空'
-            }, {
               format: 'email',
               errorMessage: '请输入正确的邮箱地址'
             }]
@@ -69,6 +66,9 @@
       }
     },
     onLoad() {
+      this.getUser()
+    },
+    onShow() {
       this.getUser()
     },
     onReady() {

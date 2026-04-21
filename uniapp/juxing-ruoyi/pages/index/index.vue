@@ -17,13 +17,23 @@
 		<view class="core-functions">
 			<view class="function-card" @click="handleNavigateToTeacher">
 				<image class="function-icon" src="../../static/icon/find_teacher.png" mode="aspectFit" />
-				<text class="function-title">找老师</text>
-				<text class="function-desc">大量生源/随时随地接单</text>
+				<text class="function-title">{{ mainEntryTitle }}</text>
+				<text class="function-desc">{{ mainEntryDesc }}</text>
 			</view>
 			<view class="function-card" @click="teacherJoin">
 				<image class="function-icon" src="../../static/icon/teacher_enter.png" mode="aspectFit" />
-				<text class="function-title">老师入驻</text>
-				<text class="function-desc">任意查询/随时随地接单</text>
+				<text class="function-title">{{ secondEntryTitle }}</text>
+				<text class="function-desc">{{ secondEntryDesc }}</text>
+			</view>
+		</view>
+		<view class="core-functions-extra">
+			<view class="function-card-wide" @click="goAiAssistant">
+				<text class="function-title">智能选课助手</text>
+				<text class="function-desc">AI 建议 + 按条件推荐认证教师</text>
+			</view>
+			<view class="function-card-wide" @click="goReviewList">
+				<text class="function-title">家长评价</text>
+				<text class="function-desc">已通过审核的真实评价</text>
 			</view>
 		</view>
 		<!-- 服务承诺区 -->
@@ -66,7 +76,7 @@
 			</view>
 			<scroll-view class="course-scroll" scroll-x>
 				<view class="course-list">
-					<view class="course-card" v-for="(course, index) in hotCourses" :key="index">
+					<view class="course-card" v-for="(course, index) in hotCourses" :key="index" @click="goCourseDetail(course.publishId)">
 						<image class="course-image" :src="course.imageUrl" mode="aspectFill" />
 						<view class="course-info">
 							<text class="course-name">{{ course.name }}</text>
@@ -77,6 +87,7 @@
 							<text class="course-teacher">{{ course.teacher }}</text>
 						</view>
 					</view>
+					<view v-if="!hotCourses.length" class="empty-hot">暂无老师发布的家教信息</view>
 				</view>
 			</scroll-view>
 		</view>
@@ -109,6 +120,10 @@
 	import {
 		findAllPromotion
 	} from '@/api/promotion/promotion'
+	import { getToken } from '@/utils/auth'
+	import { getTeacherJoinStatus } from '@/api/teacherJoin/teacherJoin'
+	import { listPublishedCourses } from '@/api/course/course'
+	import { baseUrl } from '@/config'
 
 	export default {
 		data() {
@@ -165,28 +180,7 @@
 						desc: '不满意随时退余额'
 					}
 				],
-				hotCourses: [{
-						imageUrl: 'https://ai-public.mastergo.com/ai/img_res/e4f9c701113f7cb14672be2c13df1701.jpg',
-						name: '高中数学 - 函数与导数',
-						price: '150',
-						rating: '4.9',
-						teacher: '张老师'
-					},
-					{
-						imageUrl: 'https://ai-public.mastergo.com/ai/img_res/753e1714efca28d02900b207e8fce9a6.jpg',
-						name: '高中物理 - 力学专题',
-						price: '160',
-						rating: '4.8',
-						teacher: '李老师'
-					},
-					{
-						imageUrl: 'https://ai-public.mastergo.com/ai/img_res/df547b41988f827145fc4f5aa483d6a2.jpg',
-						name: '高中英语 - 写作提升',
-						price: '140',
-						rating: '4.9',
-						teacher: '王老师'
-					}
-				],
+				hotCourses: [],
 				featuredTeachers: [{
 						avatar: 'https://ai-public.mastergo.com/ai/img_res/071139593022d150ee10eeb6c5394f31.jpg',
 						name: '张晓华',
@@ -207,11 +201,46 @@
 					}
 				],
 				// ----------------------------------
-				learningUpdates: []
+				learningUpdates: [],
+				teacherJoinInfo: {
+					hasSubmitted: false,
+					approved: false,
+					status: -1
+				}
 			}
 		},
 		mounted() {
 			this.init();
+		},
+		onShow() {
+			this.refreshRoleStatus()
+			this.loadHotCourses()
+			this.syncRoleTabText()
+		},
+		computed: {
+			roles() {
+				return (this.$store && this.$store.getters && this.$store.getters.roles) || []
+			},
+			isTeacher() {
+				return this.roles.includes('teacher')
+			},
+			mainEntryTitle() {
+				return this.isTeacher ? '老师工作台' : '找老师'
+			},
+			mainEntryDesc() {
+				return this.isTeacher ? '发布、管理家教信息和预约' : '按科目地区快速找老师'
+			},
+			secondEntryTitle() {
+				return this.isTeacher ? '老师入驻' : '学习进步'
+			},
+			secondEntryDesc() {
+				if (this.isTeacher) {
+					if (this.teacherJoinInfo.approved) return '已入驻，可正常接单'
+					if (this.teacherJoinInfo.hasSubmitted) return '已申请，等待管理员审核'
+					return '提交资料，管理员审核后入驻'
+				}
+				return '查看并购买进步商品'
+			}
 		},
 		methods: {
 
@@ -219,26 +248,141 @@
 				findAllPromotion().then(res => {
 					this.learningUpdates = res.data;
 				})
+				this.loadHotCourses()
 			},
-
-			handleNavigateToTeacher() {
-				uni.switchTab({
-					url: '/pages/findteacher/findteacher/findteacher'
-				});
+			syncRoleTabText() {
+				try {
+					uni.setTabBarItem({
+						index: 1,
+						text: this.isTeacher ? '工作台' : '找老师'
+					})
+				} catch (e) {}
 			},
+			getImage(url) {
+				if (!url) return '/static/image/1.png'
+				if (String(url).startsWith('http://')) return '/static/image/1.png'
+				if (String(url).startsWith('http')) return url
+				return baseUrl + url
+			},
+			courseDisplayName(row) {
+				const grade = row.gradeName || row.grade_name || ''
+				const subject = row.subjectName || row.subject_name || ''
+				if (grade && subject) return `${grade} - ${subject}`
+				return subject || grade || `课程#${row.publishId || row.publish_id}`
+			},
+				async loadHotCourses() {
+					try {
+						const res = await listPublishedCourses({ pageNum: 1, pageSize: 10, status: 0 })
+					const rows = Array.isArray(res)
+						? res
+						: ((res && res.rows)
+							|| (res && res.data && res.data.rows)
+							|| (Array.isArray(res && res.data) ? res.data : []))
+					this.hotCourses = rows.map((row) => ({
+						publishId: row.publishId || row.publish_id,
+						imageUrl: this.getImage(row.teacherImage || row.teacher_image),
+						name: this.courseDisplayName(row),
+						price: row.hourlyRate || row.hourly_rate || '0',
+						rating: '5.0',
+						teacher: row.teacherName || row.teacher_name || '老师'
+					}))
+				} catch (e) {
+					this.hotCourses = []
+					uni.showToast({ title: '热门课程加载失败', icon: 'none' })
+				}
+			},
+			async refreshRoleStatus() {
+				if (!this.isTeacher || !getToken()) {
+					this.teacherJoinInfo = { hasSubmitted: false, approved: false, status: -1 }
+					return
+				}
+				try {
+					const res = await getTeacherJoinStatus()
+					const d = res.data || {}
+					this.teacherJoinInfo = {
+						hasSubmitted: !!d.hasSubmitted,
+						approved: !!d.approved,
+						status: Number(d.status)
+					}
+				} catch (e) {
+					this.teacherJoinInfo = { hasSubmitted: false, approved: false, status: -1 }
+				}
+			},
+			async ensureTeacherApproved() {
+				if (!this.isTeacher) return true
+				try {
+					const res = await getTeacherJoinStatus()
+					const d = res.data || {}
+					this.teacherJoinInfo = {
+						hasSubmitted: !!d.hasSubmitted,
+						approved: !!d.approved,
+						status: Number(d.status)
+					}
+					if (this.teacherJoinInfo.approved) {
+						return true
+					}
+				} catch (e) {
+					// ignore and fall through to modal
+				}
+				uni.showModal({
+					title: '请先完成老师入驻',
+					content: '老师账号需先提交入驻并通过管理员审核，才能操作该功能。',
+					confirmText: '去入驻',
+					success: (r) => {
+						if (r.confirm) {
+							uni.navigateTo({ url: '/pages/teacherJoin/teacherJoin' })
+						}
+					}
+				})
+				return false
+			},
+				async handleNavigateToTeacher() {
+					if (this.isTeacher && !(await this.ensureTeacherApproved())) return
+					uni.switchTab({
+						url: '/pages/findteacher/findteacher/findteacher'
+					})
+				},
 			teacherJoin() {
+				if (!getToken()) {
+					uni.navigateTo({ url: '/pages/login' })
+					return
+				}
+				if (!this.isTeacher) {
+					uni.switchTab({ url: '/pages/product/product' })
+					return
+				}
 				uni.navigateTo({
 					url: '/pages/teacherJoin/teacherJoin'
-				});
+				})
+			},
+			async goAiAssistant() {
+				if (!(await this.ensureTeacherApproved())) return
+				uni.navigateTo({
+					url: '/pages/aiAssistant/aiAssistant'
+				})
+			},
+			async goReviewList() {
+				if (!(await this.ensureTeacherApproved())) return
+				uni.navigateTo({
+					url: '/pages/review/review'
+				})
 			},
 			onSwiperChange(e) {
 				this.currentSwiperIndex = e.detail.current;
 			},
 			gotoMoreCourses() {
-				// 更多课程跳转逻辑
 				uni.navigateTo({
 					url: '/pages/courses/courses'
 				});
+			},
+			goCourseDetail(publishId) {
+				if (!publishId) return
+				try {
+					uni.setStorageSync('selected_learning_course_id', String(publishId))
+				} catch (e) {}
+				uni.switchTab({
+					url: '/pages/product/product'
+				})
 			},
 			gotoMoreTeachers() {
 				// 更多教师跳转逻辑
@@ -315,6 +459,21 @@
 		flex-direction: column;
 		align-items: center;
 		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+	}
+
+	.core-functions-extra {
+		padding: 0 30rpx 24rpx;
+	}
+
+	.function-card-wide {
+		width: 100%;
+		background: #FFFFFF;
+		border-radius: 16rpx;
+		padding: 28rpx 32rpx;
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
 	}
 
 	.function-icon {
@@ -481,6 +640,13 @@
 		color: #999999;
 		margin-top: 8rpx;
 		display: block;
+	}
+
+	.empty-hot {
+		width: 100%;
+		padding: 28rpx 12rpx;
+		color: #999999;
+		font-size: 13px;
 	}
 
 	/* 优秀教师样式 */
